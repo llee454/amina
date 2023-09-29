@@ -1,0 +1,21 @@
+(executable
+  (name main)
+  (modules main)
+  (libraries
+    core
+    lwt
+    lwt.unix
+    lib
+    guile.guile
+    getopt
+    angstrom
+  )
+  (preprocess (pps
+    ppx_jane
+    lwt_ppx
+    ppx_deriving_yojson
+    ppx_expect
+  ))
+  (modes exe)
+  ; (link_flags (-cclib -fuse-ld=mold -cc clang++))
+)

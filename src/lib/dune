@@ -1,0 +1,18 @@
+(library
+  (name lib)
+  (libraries
+    core
+    lwt
+    lwt.unix
+    guile.guile
+    getopt
+    angstrom
+  )
+  (inline_tests)
+  (preprocess (pps
+    ppx_jane
+    lwt_ppx
+    ppx_deriving_yojson
+    ppx_expect
+  ))
+)

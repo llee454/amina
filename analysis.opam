@@ -1,0 +1,32 @@
+opam-version: "2.0"
+maintainer: "Larry D. Lee Jr."
+authors: [
+  "Larry D. Lee Jr."
+]
+synopsis: "Amina is a modern templating language similar to Mustache that allows users to embed expressions written in Scheme."
+description: """
+Amina is a modern templating language similar to Mustache that allows users to embed expressions written in Scheme.
+"""
+license: "GPL-v3"
+tags: []
+homepage: ""
+doc: ""
+bug-reports: ""
+pin-depends: [
+]
+depends: [
+  "ocaml"
+  "ocaml-option-flambda"
+  "dune" { >= "2.6.0" }
+  "ocaml-lsp-server"
+  "ocamlformat"
+  "ppx_jane"
+  "core"
+  "lwt"
+  "lwt_ppx"
+  "yojson" { >= "1.7.0" & < "2.0.0" }
+  "ppx_deriving_yojson" { >= "3.5.2" }
+  "guile"
+  "getopt"
+  "angstrom"
+]

@@ -1,0 +1,12 @@
+{
+  "first": "This is grand, isn't it?",
+  "second": {
+    "message": "We have nested objects.",
+    "sender": "Larry"
+  },
+  "third": [
+    "And, we have arrays.",
+    "Like this one."
+  ],
+  "fourth": true
+}

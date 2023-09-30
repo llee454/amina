@@ -19,7 +19,7 @@ let () =
        | Some data_filename, Some template_filename ->
          Guile.init ();
          let* root = read_file ~filename:data_filename >|= Yojson.Safe.from_string in
-         Stack.push Rewrite.json_context_stack root;
+         Rewrite.init_contexts root;
          let* template = read_file ~filename:template_filename in
          let () = [%sexp_of: Json.t] root |> Guile.Sexp.to_raw |> Guile.Module.define "root" in
          let _res =

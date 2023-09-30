@@ -5,21 +5,8 @@
 *)
 
 open! Core
-open! Aux
 open! Angstrom
-
-(**
-  Accepts two parsers p and q that return strings and returns a new
-  parser that matches both p and q consecutively and concatenates their
-  outcome.
-*)
-let ( <^> ) p q = ( ^ ) <$> p <*> q
-
-(**
-  Accepts two parsers p and q and returns a new parser that matches
-  both p and q consecutively and returns their results in a pair.
-*)
-let ( <&> ) p q = (fun s r -> s, r) <$> p <*> q
+open! Aux
 
 type tag_type =
   | Expr_tag
@@ -34,7 +21,34 @@ let tag_type_of_string = function
 | s -> failwithf "Error: \"%s\" is an invalid tag name." s ()
 
 let tag_type_to_string = function Expr_tag -> "expr" | Data_tag -> "data" | Each_tag -> "each"
+let root_json_context = ref None
+
+let get_root_json_context () : Yojson.Safe.t =
+  match !root_json_context with
+  | None ->
+    failwith
+      "Error: an internal error occured. You probabily tried to evaluate a JSON path without first \
+       setting the root JSON context."
+  | Some json -> json
+
 let json_context_stack = Stack.create ()
+
+let get_local_json_context () : Yojson.Safe.t =
+  match Stack.top json_context_stack with
+  | None ->
+    failwith
+      "Error: an internal error occured. You probabily tried to evaluate a JSON path without first \
+       setting the local JSON context."
+  | Some json -> json
+
+(**
+  Initializes the evaluation contexts. You must call this function
+  before you call the evluation functions defined in this module.
+*)
+let init_contexts json =
+  root_json_context := Some json;
+  Stack.push json_context_stack json
+
 let tag_stack = Stack.create ()
 
 (**
@@ -140,10 +154,8 @@ let rewrite_expr_tag expr =
   (match eval_string expr with x when String.is_string x -> String.from_raw x | x -> Guile.to_string x)
 
 let rewrite_data_tag expr =
-  let json_context = Stack.top_exn json_context_stack in
-  match parse_string ~consume:All Path.parse_path expr with
-  | Error msg -> failwithf "Error: an error occured while trying to handle a JSON path. %s" msg ()
-  | Ok parser -> parser json_context |> Yojson.Safe.pretty_to_string
+  Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr
+  |> Yojson.Safe.pretty_to_string
 
 let rewrite_tag = function
 | Expr_tag -> rewrite_expr_tag
@@ -156,25 +168,20 @@ let rec rewrite_section = function
 | Each_tag -> rewrite_each_section
 
 and rewrite_each_section expr content =
-  let json_context = Stack.top_exn json_context_stack in
-  match parse_string ~consume:All Path.parse_path expr with
-  | Error msg -> failwithf "Error: an error occured while trying to handle a JSON path. %s" msg ()
-  | Ok parser -> begin
-    match parser json_context with
-    | `List xs | `Tuple xs ->
-      List.map xs ~f:(fun next_json_context ->
-          Stack.push json_context_stack next_json_context;
-          let result = rewrite content in
-          let _ = Stack.pop_exn json_context_stack in
-          result
-      )
-      |> String.concat
-    | _ ->
-      failwithf
-        "Error: tried to open an \"each\" section on a JSON value that was not an array or tuple. You \
-         can only open \"each\" sections on JSON arrays and tuples. The expression was \"%s\"."
-        expr ()
-  end
+  match Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr with
+  | `List xs | `Tuple xs ->
+    List.map xs ~f:(fun next_json_context ->
+        Stack.push json_context_stack next_json_context;
+        let result = rewrite content in
+        let _ = Stack.pop_exn json_context_stack in
+        result
+    )
+    |> String.concat
+  | _ ->
+    failwithf
+      "Error: tried to open an \"each\" section on a JSON value that was not an array or tuple. You can \
+       only open \"each\" sections on JSON arrays and tuples. The expression was \"%s\"."
+      expr ()
 
 and rewrite content =
   List.map content ~f:(function
@@ -186,18 +193,21 @@ and rewrite content =
 
 let%expect_test "rewrite" =
   Guile.init ();
-  {json|
+  let root =
+    {json|
      {
        "example_array": [1, 2, 3]
      }
-   |json}
-  |> Yojson.Safe.from_string
-  |> Stack.push json_context_stack;
-  "This is a test expression {expr: (* 3 7)}. Here's a data {data:.example_array[1]}. Here's a section \
-   {#each:.example_array}Item:{data:.} {/each}. It works! See?"
+   |json} |> Yojson.Safe.from_string
+  in
+  let local = root in
+  root_json_context := Some root;
+  Stack.push json_context_stack local;
+  "This is a test expression {expr: (* 3 7)}. Here's a data {data:root.example_array[1]}. Here's a \
+   section {#each:root.example_array}Item:{data:local} {/each}. It works! See?"
   |> Angstrom.parse_string ~consume:Prefix parse
   |> Result.ok_or_failwith
   |> rewrite
   |> printf "%s";
-  (* |> printf !"%{sexp: grammar list}"; *)
-  [%expect {| This is a test expression 21. Here's a data 2. Here's a section Item:1 Item:2 Item:3 . It works! See? |}]
+  [%expect
+    {| This is a test expression 21. Here's a data 2. Here's a section Item:1 Item:2 Item:3 . It works! See? |}]

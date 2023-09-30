@@ -1,12 +1,12 @@
 {
-  "first": "This is grand, isn't it?",
-  "second": {
-    "message": "We have nested objects.",
-    "sender": "Larry"
-  },
-  "third": [
-    "And, we have arrays.",
-    "Like this one."
-  ],
-  "fourth": true
+  "example_array": [
+    {
+      "name": "first",
+      "message": "this is an example"
+    },
+    {
+      "name": "second",
+      "message": "this is another example."
+    }
+  ]
 }

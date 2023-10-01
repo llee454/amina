@@ -19,7 +19,14 @@ opam switch create . 5.0.0+options --no-install
 opam update
 opam install --deps-only . -y
 dune build
+dune runtest
 dune exec src/main.exe
+```
+
+Once you have compiled Amina and tested any new changes you can install Amina to your local OPAM switch environment using:
+
+```bash
+dune install
 ```
 
 Execution
@@ -28,13 +35,13 @@ Execution
 Use the following command fo execute the main script which outputs the results of the analysis:
 
 ```bash
-dune exec src/main.exe -- --template=TEMPLATE_FILE < JSON_FILE
+amina.exe -- --template=TEMPLATE_FILE < JSON_FILE
 ```
 
 This package includes examples for you to review. You can evaluate them using the following command line.
 
 ```bash
-dune exec src/main.exe -- --template=example.md < example.md
+amina.exe -- --template=example.md < example.md
 ```
 
 Details

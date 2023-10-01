@@ -1,6 +1,6 @@
 (executable
-  (name main)
-  (modules main)
+  (name amina)
+  (modules amina)
   (libraries
     core
     lwt
@@ -20,3 +20,7 @@
   (modes exe)
   ; (link_flags (-cclib -fuse-ld=mold -cc clang++))
 )
+(install
+ (files amina.exe)
+ (section bin)
+ )

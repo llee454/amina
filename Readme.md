@@ -14,19 +14,12 @@ Note: the following are a hack solution to fix the fact that brew and opam are
 out of sync and opam's owl-plplot library requires library versions that can no
 longer be installed with brew.
 
-```
+```bash
 opam switch create . 5.0.0+options --no-install
 opam update
 opam install --deps-only . -y
 dune build
 dune exec src/main.exe
-dune exec src/test.exe
-```
-
-If you encounter issues with LibFFI or OpenBLAS, use something like the following:
-```
-opam reinstall conf-libffi
-PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/Cellar/openblas/0.3.17/lib/pkgconfig/ opam reinstall conf-openblas
 ```
 
 Execution
@@ -34,15 +27,12 @@ Execution
 
 Use the following command fo execute the main script which outputs the results of the analysis:
 
-```
-dune exec src/main.exe
+```bash
+dune exec src/main.exe -- --json=DATA_FILE TEMPLATE_FILE
 ```
 
-Generate Report
----------------
+This package includes examples for you to review. You can evaluate them using the following command line.
 
-To perform an end-to-end build (which will call the analysis script and update the final report) run:
-
-```
-dune build
+```bash
+dune exec src/main.exe -- --json=example.json example.md
 ```

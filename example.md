@@ -51,17 +51,32 @@ Of course, you can call all of the functions that Guile defines. For example, Am
 {expr:(string-upcase (get-data "root.example_array[0].message"))}
 ```
 
-### Each Section Example
+### Each Path Expression Section Example
 
 Often, we want to display some snippet of text for each element of an array. For example, In markdown, we can easily represent tables using text. However, doing so requires us to wrap the values in each row within vertical pipe characters. The following example, shows how we can do this in Amina:
 
 | Name | Message |
-| ---- | ------- | 
+| ---- | ------- |
 {#each:root.example_array}| {data:local.name} | {data:local.message} |
 {/each}
+
+### Each Scheme Expression Section Example
+
+Amina lets you define your own local contexts using Scheme. For example, the following example uses scheme to create a list of values and then inserts them into the nested template.
+
+| ID | Name | Message |
+| -- | ---- | ------- |
+{#each-expr:
+  (list
+    (list 1 "first" "this is the first")
+    (list 2 "second" "this is another"))
+}| {data:local[0]} | {data:local[1]} | {data:local[2]} |
+{/each-expr}
+
+You can use this feature to print sorted, filtered, and otherwise transformed lists.
 
 ### Conclusion
 
 I wrote Amina to help me generate and maintain scientific reports. I found myself having to calculate and report on a large number of numbers. I would write code to generate these numbers, however, occasionally I would find a bug or have a new updated dataset. Manually hunting down and updating all of the numbers contained in a report is tedious and error prone. So, I switched to using Mustache instead. Mustache allowed me to insert variables that reference numbers instead of numbers themselves. If I then updated the numbers, the Mustache would automatically detect the update and insert the correct values. This approach reduced the tedium of maintaining reports and reduced errors. Additionally, it boosted accountability as I could trace the origin of every number contained in my reports.
 
-Over time however, I grew frustrated with Mustache's limited syntax. Hence Amina was born. You can use Amina for similar use cases.  
+Over time however, I grew frustrated with Mustache's limited syntax. Hence Amina was born. You can use Amina for similar use cases.

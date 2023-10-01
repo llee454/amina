@@ -12,15 +12,22 @@ type tag_type =
   | Expr_tag
   | Data_tag
   | Each_tag
+  | Each_expr_tag
 [@@deriving equal, sexp]
 
 let tag_type_of_string = function
 | "expr" -> Expr_tag
 | "data" -> Data_tag
 | "each" -> Each_tag
+| "each-expr" -> Each_expr_tag
 | s -> failwithf "Error: \"%s\" is an invalid tag name." s ()
 
-let tag_type_to_string = function Expr_tag -> "expr" | Data_tag -> "data" | Each_tag -> "each"
+let tag_type_to_string = function
+| Expr_tag -> "expr"
+| Data_tag -> "data"
+| Each_tag -> "each"
+| Each_expr_tag -> "each-expr"
+
 let root_json_context = ref None
 
 let get_root_json_context () : Yojson.Safe.t =
@@ -172,11 +179,13 @@ let rewrite_tag = function
 | Expr_tag -> rewrite_expr_tag
 | Data_tag -> rewrite_data_tag
 | Each_tag -> failwith "Error: \"each\" tags can only open sections."
+| Each_expr_tag -> failwith "Error: \"each\" tags can only open sections."
 
 let rec rewrite_section = function
 | Expr_tag -> failwith "Error: you have an \"expr\" tag opening a section."
 | Data_tag -> failwith "Error: you have a \"data\" tag opening a section."
 | Each_tag -> rewrite_each_section
+| Each_expr_tag -> rewrite_each_expr_section
 
 and rewrite_each_section expr content =
   match Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr with
@@ -192,6 +201,22 @@ and rewrite_each_section expr content =
     failwithf
       "Error: tried to open an \"each\" section on a JSON value that was not an array or tuple. You can \
        only open \"each\" sections on JSON arrays and tuples. The expression was \"%s\"."
+      expr ()
+
+and rewrite_each_expr_section expr content =
+  Guile.eval_string expr |> Json.of_scm |> function
+  | `List xs | `Tuple xs ->
+    List.map xs ~f:(fun next_json_context ->
+        Stack.push json_context_stack next_json_context;
+        let result = rewrite content in
+        let _ = Stack.pop_exn json_context_stack in
+        result
+    )
+    |> String.concat
+  | _ ->
+    failwithf
+      "Error: invalid \"each-expr\" tag expression. The Scheme expression must evaluate to a list. The \
+       expression (\"%s\") did not evaluate to a list. Change it so that it returns a list."
       expr ()
 
 and rewrite content =

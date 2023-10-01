@@ -41,13 +41,13 @@ As shown above, you can reference specific values within the root JSON value by 
 
 You can execute arbitrary Scheme expressions in your template file. Amina will evaluate these expressions and replace the tags with the resulting values. Additionally, Amina defines a function named `get-data <path>` that accepts a JSON path expression in a Scheme string and returns the referenced data. So, for example, the following scheme expression tag is equivalent to our previous JSON path expression tag.
 
-```json
+```
 {expr:(get-data "root.example_array[0].message")}
 ```
 
 Of course, you can call all of the functions that Guile defines. For example, Amina will read the message referenced in the previous example, but uppercase it using Schemes' uppercase function.
 
-```json
+```
 {expr:(string-upcase (get-data "root.example_array[0].message"))}
 ```
 

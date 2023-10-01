@@ -64,22 +64,33 @@ let is_open_brace = Char.equal '{'
 let is_close_brace = Char.equal '}'
 let is_pound = Char.equal '#'
 let is_slash = Char.equal '/'
+let is_backslash = Char.equal '\\'
 let is_colon = Char.equal ':'
 let lex_open_brace = string "{"
 let lex_close_brace = string "}"
 let lex_colon = string ":"
 let lex_pound = string "#"
 let lex_slash = string "/"
-
-(* TODO: add escaping *)
-let parse_text = take_while1 (Fn.compose not is_open_brace) >>| fun s -> Text s
+let lex_backslash = string "\\"
+let parse_escaped_char = lex_backslash *> any_char >>| String.of_char
 
 let%expect_test "parse_text" =
-  "This is a test. {expr: 55}"
+  {|\{|}
+  |> Angstrom.parse_string ~consume:Prefix parse_escaped_char
+  |> Result.ok_or_failwith
+  |> printf "%s";
+  [%expect {| { |}]
+
+let parse_text =
+  many1 (parse_escaped_char <|> take_while1 (fun c -> (not (is_open_brace c)) && not (is_backslash c)))
+  >>| fun xs -> Text (String.concat xs)
+
+let%expect_test "parse_text" =
+  {|This is a test. \{not a tag\\} {expr: 55}|}
   |> Angstrom.parse_string ~consume:Prefix parse_text
   |> Result.ok_or_failwith
   |> printf !"%{sexp: grammar}";
-  [%expect {| (Text "This is a test. ") |}]
+  [%expect {| (Text "This is a test. {not a tag\\} ") |}]
 
 let parse_tag_name =
   take_while1 (fun c ->
@@ -191,6 +202,19 @@ and rewrite content =
     )
   |> String.concat
 
+(** Accepts a template string and expands the tags contained within it. *)
+let rewrite_string template =
+  try
+    parse_string ~consume:All parse template |> function
+    | Error msg -> failwithf "Error: an error occured while trying to parse a template. %s" msg ()
+    | Ok parsing -> rewrite parsing
+  with
+  | _ ->
+    failwithf
+      !"Error: an error occured while trying to parse and/or rewrite a template. Perhaps you have an \
+        unclosed section tag. The last opened section tag was (\"%{sexp: tag_type option}\")."
+      (Stack.top tag_stack) ()
+
 let%expect_test "rewrite" =
   Guile.init ();
   let root =
@@ -200,14 +224,10 @@ let%expect_test "rewrite" =
      }
    |json} |> Yojson.Safe.from_string
   in
-  let local = root in
-  root_json_context := Some root;
-  Stack.push json_context_stack local;
+  init_contexts root;
   "This is a test expression {expr: (* 3 7)}. Here's a data {data:root.example_array[1]}. Here's a \
    section {#each:root.example_array}Item:{data:local} {/each}. It works! See?"
-  |> Angstrom.parse_string ~consume:Prefix parse
-  |> Result.ok_or_failwith
-  |> rewrite
+  |> rewrite_string
   |> printf "%s";
   [%expect
     {| This is a test expression 21. Here's a data 2. Here's a section Item:1 Item:2 Item:3 . It works! See? |}]

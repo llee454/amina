@@ -18,14 +18,25 @@ let () =
        | _, None -> failwith "Error: Invalid command line. The template file is required."
        | Some data_filename, Some template_filename ->
          Guile.init ();
-         let* root = read_file ~filename:data_filename >|= Yojson.Safe.from_string in
-         Rewrite.init_contexts root;
-         let* template = read_file ~filename:template_filename in
-         let () = [%sexp_of: Json.t] root |> Guile.Sexp.to_raw |> Guile.Module.define "root" in
-         let _res =
-           Angstrom.parse_string ~consume:All Rewrite.parse template |> function
-           | Result.Error _ -> failwith "Error: an error occured while trying to parse the template file."
-           | Result.Ok parsing -> Rewrite.rewrite parsing |> printf "Result: %s\n"
+         let _ =
+           let open Guile in
+           Functions.register_fun1 "get-data" (fun (path : scm) ->
+               if String.is_string path
+               then
+                 String.from_raw path
+                 |> Path.eval_string ~root:(Rewrite.get_root_json_context ())
+                      ~local:(Rewrite.get_local_json_context ())
+                 |> [%sexp_of: Json.t]
+                 |> Guile.Sexp.to_raw
+               else
+                 Error.error ~fn_name:"get-data"
+                   "Error: an error occured while trying to evaluate a call to get-data. get-data \
+                    expects a single string argument that represents a JSON path expression."
+           )
          in
+         let* root = read_file ~filename:data_filename >|= Yojson.Safe.from_string in
+         let* template = read_file ~filename:template_filename in
+         Rewrite.init_contexts root;
+         Rewrite.rewrite_string template |> printf "%s";
          Lwt.return_unit
      end

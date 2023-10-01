@@ -9,9 +9,9 @@ Amina is a modern templating language similar to Mustache that allows users to e
 """
 license: "GPL-v3"
 tags: []
-homepage: ""
-doc: ""
-bug-reports: ""
+homepage: "https://github.com/llee454/amina"
+doc: "https://github.com/llee454/amina"
+bug-reports: "https://github.com/llee454/amina"
 pin-depends: [
 ]
 depends: [
@@ -21,6 +21,7 @@ depends: [
   "ocaml-lsp-server"
   "ocamlformat"
   "ppx_jane"
+  "ppx_blob"
   "core"
   "lwt"
   "lwt_ppx"

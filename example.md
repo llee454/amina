@@ -98,12 +98,10 @@ You can use this feature to print sorted, filtered, and otherwise transformed li
 Most databases support JSON exports. For example, SQLite can be used to generate JSON strings as follows:
 
 ```bash
-sqlite3 data.sqlite "SELECT JSON_GROUP_ARRAY (JSON_OBJECT ('name', name_hash, 'age', age)) FROM (SELECT * FROM thd LIMIT 10)" > data.json;
-
-amina --json=data.json template.md
+sqlite3 data.sqlite "SELECT JSON_GROUP_ARRAY (JSON_OBJECT ('name', name_hash, 'age', age)) FROM (SELECT * FROM thd LIMIT 10)" | amina --template=template.md
 ```
 
-You can use this feature to generate reports from data stored in databases using Amina. 
+You can use this feature to generate reports from data stored in databases using Amina.
 
 ## Conclusion
 

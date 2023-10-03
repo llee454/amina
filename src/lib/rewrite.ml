@@ -145,6 +145,11 @@ let parse =
         )
   )
 
+let parse_string (template : string) =
+  Angstrom.parse_string ~consume:All parse template |> function
+  | Error msg -> failwithf "Error: an error occured while trying to parse a template. %s" msg ()
+  | Ok parsing -> parsing
+
 let%expect_test "parse" =
   {json|
     {
@@ -172,8 +177,10 @@ let rewrite_expr_tag expr =
   (match eval_string expr with x when String.is_string x -> String.from_raw x | x -> Guile.to_string x)
 
 let rewrite_data_tag expr =
-  Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr
-  |> Yojson.Safe.pretty_to_string
+  Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr |> function
+  | `Null -> ""
+  | `String string -> string
+  | json -> Yojson.Safe.pretty_to_string json
 
 let rewrite_tag = function
 | Expr_tag -> rewrite_expr_tag
@@ -229,11 +236,9 @@ and rewrite content =
 
 (** Accepts a template string and expands the tags contained within it. *)
 let rewrite_string template =
-  try
-    parse_string ~consume:All parse template |> function
-    | Error msg -> failwithf "Error: an error occured while trying to parse a template. %s" msg ()
-    | Ok parsing -> rewrite parsing
-  with
+  try parse_string template |> rewrite with
+  | Failure msg ->
+    failwithf !"Error: an error occured while trying to parse and/or rewrite a template. %s" msg ()
   | _ ->
     failwithf
       !"Error: an error occured while trying to parse and/or rewrite a template. Perhaps you have an \

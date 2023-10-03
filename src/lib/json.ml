@@ -22,11 +22,29 @@ let rec sexp_of_t : Yojson.Safe.t -> Sexp.t = function
 let rec of_scm x : Yojson.Safe.t =
   let open Guile in
   match () with
-  | _ when Pair.is_cons x -> `List (List.of_raw of_scm x)
+  | _ when List.is_null x -> `List []
+  | _ when Pair.is_cons x -> (
+    try `List (List.of_raw of_scm x) with
+    | Failure msg ->
+      failwithf
+        "Error: an internal error occured while trying to convert a Scheme expression (\"%s\") into a \
+         JSON expression. %s"
+        (to_string x) msg ()
+    | _ ->
+      failwithf
+        "Error: an internal error occured while trying to convert a Scheme expression (\"%s\") into a \
+         JSON expression."
+        (to_string x) ()
+  )
   | _ when Bool.is_bool x -> `Bool (Bool.from_raw x)
   | _ when Number.is_integer x -> `Int (Number.int_from_raw x)
-  | _ when Number.is_number x -> `Float (Float.of_string (to_string x))
+  | _ when Number.is_number x -> `Float (Number.Float.from_raw x)
   | _ when Char.is_char x -> `String (Char.from_raw x |> Core.String.of_char)
   | _ when String.is_string x -> `String (String.from_raw x)
-  | _ when Symbol.is_symbol x -> `String (to_string x)
-  | _ -> `String (to_string x)
+  | _ when Symbol.is_symbol x -> `String (Symbol.from_raw x)
+  | _ ->
+    failwithf
+      "Error: an internal error occured while trying to convert a Scheme expression (\"%s\") into a JSON \
+       expression. We couldn't recognize the type Scheme expression's type. It wasn't a string, integer, \
+       etc."
+      (to_string x) ()

@@ -1,19 +1,17 @@
 opam-version: "2.0"
+name: amina
+version: "0.5.0"
 maintainer: "Larry D. Lee Jr."
 authors: [
   "Larry D. Lee Jr."
 ]
-synopsis: "Amina is a modern templating language similar to Mustache that allows users to embed expressions written in Scheme."
-description: """
-Amina is a modern templating language similar to Mustache that allows users to embed expressions written in Scheme.
-"""
-license: "GPL-v3"
+synopsis: "Amina is a modern templating language similar to Mustache that allows users to embed expressions written in Scheme"
+description: "Amina is a modern templating language similar to Mustache that allows users to embed expressions written in Scheme"
+license: "GPL-3.0-or-later"
 tags: []
 homepage: "https://github.com/llee454/amina"
 doc: "https://github.com/llee454/amina"
 bug-reports: "https://github.com/llee454/amina"
-pin-depends: [
-]
 depends: [
   "ocaml"
   "ocaml-option-flambda"
@@ -31,3 +29,4 @@ depends: [
   "getopt"
   "angstrom"
 ]
+build: ["dune" "build" "-p" amina "-j" jobs]

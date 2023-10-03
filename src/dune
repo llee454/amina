@@ -1,5 +1,7 @@
 (executable
   (name amina)
+  (public_name amina)
+  (package amina)
   (modules amina)
   (libraries
     core
@@ -23,4 +25,5 @@
 (install
  (files amina.exe)
  (section bin)
+ (package amina)
  )

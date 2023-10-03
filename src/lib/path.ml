@@ -10,7 +10,7 @@ type reference =
 type base_ref =
   | Root
   | Local
-[@@deriving sexp]
+[@@deriving sexp, equal]
 
 let base_ref_of_string = function
 | "root" -> Root
@@ -41,23 +41,23 @@ let parse_field = lex_dot *> lex_text1 >>| fun x -> Field x
 let parse_index = lex_open_bracket *> lex_int <* lex_close_bracket >>| fun n -> Index n
 let parse = parse_base_ref <&> many (parse_field <|> parse_index) >>| fun (base, refs) -> { base; refs }
 
+let parse_string path =
+  match parse_string ~consume:All parse path with
+  | Error msg -> failwithf "Error: an error occured while trying to parse a JSON path. %s" msg ()
+  | Ok parsing -> parsing
+
 let%expect_test "parse0" =
-  parse_string ~consume:All parse "root" |> Result.ok_or_failwith |> printf !"%{sexp: path}";
+  parse_string "root" |> printf !"%{sexp: path}";
   [%expect {| ((base Root) (refs ())) |}]
 
 let%expect_test "parse1" =
-  parse_string ~consume:All parse "root.example[0]" |> Result.ok_or_failwith |> printf !"%{sexp: path}";
+  parse_string "root.example[0]" |> printf !"%{sexp: path}";
   [%expect {| ((base Root) (refs ((Field example) (Index 0)))) |}]
 
 let eval_field field = function
+| `Null -> `Null
 | `Assoc xs -> begin
-  match List.Assoc.find ~equal:String.equal xs field with
-  | Some json -> json
-  | None ->
-    failwithf
-      "Error: an error occured while trying to evaluate a JSON path. The field reference \"%s\" is \
-       invalid."
-      field ()
+  (match List.Assoc.find ~equal:String.equal xs field with Some json -> json | None -> `Null)
 end
 | _ ->
   failwithf
@@ -66,36 +66,30 @@ end
     field ()
 
 let eval_index index = function
-| `List xs | `Tuple xs -> begin
-  match List.nth xs index with
-  | Some json -> json
-  | None ->
-    failwithf
-      "Error: an error occured while trying to evaluate a JSON path. The array index \"%d\" is invalid. \
-       Perhaps it is too large?"
-      index ()
-end
+| `Null -> `Null
+| `List xs | `Tuple xs -> begin (match List.nth xs index with Some json -> json | None -> `Null) end
 | _ ->
   failwithf
     "Error: an error occured while trying to evaluate a JSON path. You applied an array reference to a \
      JSON value that is not an array."
     ()
 
-let eval ~(root : Yojson.Safe.t) ~(local : Yojson.Safe.t) (path : path) =
-  let init = (match path.base with Root -> root | Local -> local) in
-  List.fold path.refs ~init ~f:(fun acc -> function
+let eval_with (context : Yojson.Safe.t) path =
+  List.fold path.refs ~init:context ~f:(fun acc -> function
     | Field field -> eval_field field acc | Index index -> eval_index index acc
   )
 
+let eval ~(root : Yojson.Safe.t) ~(local : Yojson.Safe.t) (path : path) =
+  let init = (match path.base with Root -> root | Local -> local) in
+  eval_with init path
+
 let eval_string ~root ~local path =
-  try
-    match parse_string ~consume:All parse path with
-    | Error msg -> failwithf "Error: an error occured while trying to parse a JSON path. %s" msg ()
-    | Ok parsing -> eval ~root ~local parsing
-  with
+  try parse_string path |> eval ~root ~local with
+  | Failure msg ->
+    failwithf "Error: an error occured while trying to parse a JSON path (\"%s\"). %s" path msg ()
   | _ ->
     failwithf
-      "Error: an error occured while tryingt to parse a JSON path (\"%s\"). We were unable to parse the \
+      "Error: an error occured while trying to parse a JSON path (\"%s\"). We were unable to parse the \
        entire path expression as it contains one or more syntax errors."
       path ()
 

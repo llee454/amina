@@ -75,6 +75,62 @@ integer).
 For example: `root.example_array[0]` is a JSON path expression that references
 the first element of the array stored in the field named "example_array".
 
+Scheme Functions
+----------------
+
+Amina defines a set of Scheme functions that can be used within Scheme
+expression tags.
+
+### get-data
+
+`(get-data <path> [json])` accepts one string argument `<path>` that must
+represent a JSON path expression and an optional argument `[json]` that must be
+a JSON object; and returns the JSON value referenced by `<path>`. If `[json]` is
+passed, local JSON path expressions will refer to `[json]`.
+
+Examples:
+
+```
+{expr:(get-data "root.authors[0].name")}
+```
+
+```
+{expr:(get-data "local.name" (get-data "root.authors[0]"))}
+```
+
+### float-to-string
+
+`(float-to-string <number> [decimals])` accepts two arguments: `<number>` a
+floating point number; and `[decimals]` and optional integer; and returns a
+string that represents `<number>`. If `[decimals]` is given, the string will
+display the given number of decimal point values.
+
+Example:
+
+`(float-to-string 3.14159 2)`
+
+### call-with-local-context
+
+`(call-with-local-context <function> <json>)` accepts two arguments:
+`<function>` a function that does not accept any arguments; and `<json>` a JSON
+object; sets the Local JSON context to equal `<json>` and calls `<function>` in
+that context.
+
+Example:
+
+```lisp
+(call-with-local-context
+  (lambda () (get-data "local.email"))
+  (get-data "root.authors[0]"))
+```
+
+### parse-path
+
+`(parse-path <path>)` accepts a string argument `<path>` that must be a JSON
+path expression and parses it.
+
+Example: `(parse-path "root.authors[0].name")`
+
 Examples
 --------
 

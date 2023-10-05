@@ -54,11 +54,18 @@ let%expect_test "parse1" =
   parse_string "root.example[0]" |> printf !"%{sexp: path}";
   [%expect {| ((base Root) (refs ((Field example) (Index 0)))) |}]
 
-let eval_field field = function
+let eval_field field : Yojson.Safe.t -> Yojson.Safe.t = function
 | `Null -> `Null
 | `Assoc xs -> begin
   (match List.Assoc.find ~equal:String.equal xs field with Some json -> json | None -> `Null)
 end
+(* When JSON objects are mapped to Scheme values and back again to JSON they are transformed into lists. *)
+| `List xs ->
+  List.find_map xs ~f:(function
+    | `List [ `String key; value ] when String.equal field key -> Some value
+    | _ -> None
+    )
+  |> Option.value_map ~default:`Null ~f:(fun json -> json)
 | _ ->
   failwithf
     "Error: an error occured while trying to evaluate a JSON path. You applied a field reference \

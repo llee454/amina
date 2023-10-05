@@ -14,5 +14,6 @@
     lwt_ppx
     ppx_deriving_yojson
     ppx_expect
+    ppx_blob
   ))
 )

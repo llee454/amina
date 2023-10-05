@@ -13,8 +13,8 @@ let define_parse_path () =
            represent JSON path expressions. You did not call parse-path on a string argument."
   )
 
-let define_get_data () =
-  Functions.register_fun1 "get-data" (fun (path : scm) ->
+let define_get_data_aux () =
+  Functions.register_fun1 "get-data-aux" (fun (path : scm) ->
       if String.is_string path
       then
         String.from_raw path
@@ -23,54 +23,28 @@ let define_get_data () =
         |> [%sexp_of: Json.t]
         |> Guile.Sexp.to_raw
       else
-        Error.error ~fn_name:"get-data"
-          "Error: an error occured while trying to evaluate a call to get-data. get-data expects a \
-           single string argument that represents a JSON path expression."
+        Error.error ~fn_name:"get-data-aux"
+          "Error: an error occured while trying to evaluate a call to get-data-aux. get-data-aux expects \
+           a single string argument that represents a JSON path expression."
   )
 
-let define_get_scheme_data () =
-  Functions.register_fun2 "get-scheme-data" (fun (path_scm : scm) (data : scm) : scm ->
-      let open Path in
-      if String.is_string path_scm
+let define_push_local_context () =
+  Functions.register_fun1 "push-local-context!" (fun (json : scm) ->
+      Json.of_scm json |> Stack.push Rewrite.json_context_stack;
+      eol
+  )
+
+let define_pop_local_context () =
+  Functions.register_fun1 "pop-local-context!" ~no_opt:1 ~rst:true (fun args ->
+      if List.is_null args
       then (
-        let ({ base; refs } as path) = String.from_raw path_scm |> parse_string in
-        match base with
-        | Root ->
-          eval_with (Rewrite.get_root_json_context ()) path |> [%sexp_of: Json.t] |> Guile.Sexp.to_raw
-        | Local ->
-          Core.List.fold refs ~init:data ~f:(fun acc -> function
-            | Field field_name ->
-              if Pair.is_cons acc
-              then
-                List.of_raw Fn.id acc
-                |> Core.List.find_map ~f:(fun x ->
-                       if Pair.is_cons x
-                          && (not (List.is_null x))
-                          && String.is_string (Pair.car x)
-                          && not (List.is_null (Pair.cdr x))
-                       then (
-                         let curr_field_name = String.from_raw (Pair.car x) in
-                         Option.some_if ([%equal: string] field_name curr_field_name) (Pair.cadr x)
-                       )
-                       else None
-                   )
-                |> Option.value ~default:null_scm
-              else null_scm
-            | Index index ->
-              if Pair.is_cons acc
-              then
-                List.of_raw Fn.id acc
-                |> (fun xs -> Core.List.nth xs index)
-                |> Option.value ~default:null_scm
-              else null_scm
-          )
+        let _ = Stack.pop Rewrite.json_context_stack in
+        eol
       )
       else
-        Error.error ~fn_name:"get-scheme-data"
-          "Error: an error occured while trying to call get-scheme-data. Get-scheme-data accepts two \
-           arguments: path and data. Path must be a string that represents a JSON path expression. Data \
-           is a Scheme datastructure that should be a translated JSON value. You called get-scheme-data \
-           without passing a string argument."
+        Error.error ~fn_name:"pop-local-context"
+          "Error: an error occured while trying to call pop-local-context. This function doesn't take \
+           any arguments yet you passed it one."
   )
 
 let define_float_to_string () =
@@ -109,8 +83,10 @@ let define_float_to_string () =
 let init () =
   Guile.init ();
   let _ = define_parse_path ()
-  and _ = define_get_data ()
-  and _ = define_get_scheme_data ()
+  and _ = define_get_data_aux ()
+  and _ = define_push_local_context ()
+  and _ = define_pop_local_context ()
   and _ = define_float_to_string () in
+  let _ = eval_string [%blob "init.scm"] in
   Gc.full_major ();
   ()

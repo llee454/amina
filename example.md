@@ -84,7 +84,6 @@ You can use this feature to print sorted, filtered, and otherwise transformed li
 | ID | Name | Income | Notes |
 | -- | ---- | ------ | ----- |
 {#each-expr:
-  (use-modules (ice-9 format))
   (sort
     (list
       (list 1 "first" 234.12 "this is the first")

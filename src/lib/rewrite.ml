@@ -105,7 +105,6 @@ let parse_tag_name =
   )
   >>| tag_type_of_string
 
-(* TODO: add escaping *)
 let parse_tag_content = take_till is_close_brace
 
 let parse_tag =

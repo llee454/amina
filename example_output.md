@@ -23,6 +23,12 @@ The remaining elements of the path are either field references or array indices.
 
 I've touched on sections. Sections have the form: `{#tag:<expression>}<content>{/tag}`. These tags have two effects. First, they define a "local context," Amina will evaluate `<expression>` and assign the local JSON value to the result. All JSON path references to "local" will refer to either this JSON value or, if its an array, one of its elements. Secondly, if the result is an array value, Amina may duplicate `<content>` for each element in the array.
 
+### Motivation
+
+I wrote Amina to help me generate and maintain scientific reports. I found myself having to calculate and report on a large number of numbers. I would write code to generate these numbers, however, occasionally I would find a bug or have a new updated dataset. Manually hunting down and updating all of the numbers contained in a report is tedious and error prone. So, I switched to using Mustache instead. Mustache allowed me to insert variables that reference numbers instead of numbers themselves. If I then updated the numbers, the Mustache would automatically detect the update and insert the correct values. This approach reduced the tedium of maintaining reports and reduced errors. Additionally, it boosted accountability as I could trace the origin of every number contained in my reports.
+
+Over time however, I grew frustrated with Mustache's limited syntax. Hence Amina was born. You can use Amina for similar use cases.
+
 ## Examples
 
 This file is an example template. It contains Markdown interspersed with Amina tags.  You can pass this file to Amina along with its accompanying JSON file and it will return a new file in which the tags have been evaluated and replaced.
@@ -40,7 +46,7 @@ For example, Amina will replace the following tag with the value of the root JSO
 }
 ```
 
-As shown above, you can reference specific values within the root JSON value by adding additional field and array indices. For example: `"this is an example"`.
+As shown above, you can reference specific values within the root JSON value by adding additional field and array indices. For example: `this is an example`.
 
 ### Scheme Expression Example
 
@@ -62,8 +68,8 @@ Often, we want to display some snippet of text for each element of an array. For
 
 | Name | Message |
 | ---- | ------- |
-| "first" | "this is an example" |
-| "second" | "this is another example." |
+| first | this is an example |
+| second | this is another example. |
 
 
 ### Each Scheme Expression Section Example
@@ -72,14 +78,27 @@ Amina lets you define your own local contexts using Scheme. For example, the fol
 
 | ID | Name | Message |
 | -- | ---- | ------- |
-| 1 | "first" | "this is the first" |
-| 2 | "second" | "this is another" |
+| 1 | first | this is the first |
+| 2 | second | this is another |
 
 
 You can use this feature to print sorted, filtered, and otherwise transformed lists.
 
-### Conclusion
+| ID | Name | Income | Notes |
+| -- | ---- | ------ | ----- |
+| 2 | second | 1,532.34 | this is another |
+| 1 | first | 234.12 | this is the first |
 
-I wrote Amina to help me generate and maintain scientific reports. I found myself having to calculate and report on a large number of numbers. I would write code to generate these numbers, however, occasionally I would find a bug or have a new updated dataset. Manually hunting down and updating all of the numbers contained in a report is tedious and error prone. So, I switched to using Mustache instead. Mustache allowed me to insert variables that reference numbers instead of numbers themselves. If I then updated the numbers, the Mustache would automatically detect the update and insert the correct values. This approach reduced the tedium of maintaining reports and reduced errors. Additionally, it boosted accountability as I could trace the origin of every number contained in my reports.
 
-Over time however, I grew frustrated with Mustache's limited syntax. Hence Amina was born. You can use Amina for similar use cases.
+### Integrating with SQLite
+
+Most databases support JSON exports. For example, SQLite can be used to generate JSON strings as follows:
+
+```bash
+sqlite3 data.sqlite "SELECT JSON_GROUP_ARRAY (JSON_OBJECT ('name', name_hash, 'age', age)) FROM (SELECT * FROM thd LIMIT 10)" | amina --template=template.md
+```
+
+You can use this feature to generate reports from data stored in databases using Amina.
+
+## Conclusion
+

@@ -1,9 +1,10 @@
-(lang dune 2.7)
-(name amina)
+(lang dune 2.9)
 (license GPL-3.0)
 (authors "Larry D. Lee Jr. <llee454@gmail.com>")
-(source (uri https://github.com/llee454/amina))
+(maintainers "Larry D. Lee Jr. <llee454@gmail.com>")
+(source (github llee454/amina))
 (version 0.5.0)
+(generate_opam_files)
 (package
  (name amina)
  (synopsis "Amina is a modern template program")
@@ -15,4 +16,18 @@
   JSON stream. You can use Amina to generate text files that report data taken
   from a JSON stream.
   ")
+ (depends
+  ocaml-lsp-server
+  ocamlformat
+  ppx_jane
+  ppx_blob
+  core
+  lwt
+  lwt_ppx
+  yojson
+  ppx_deriving_yojson
+  guile
+  getopt
+  angstrom
  )
+)

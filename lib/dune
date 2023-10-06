@@ -1,5 +1,5 @@
 (library
-  (name lib)
+  (name amina)
   (libraries
     core
     lwt
@@ -9,6 +9,7 @@
     angstrom
   )
   (inline_tests)
+  (preprocessor_deps (file init.scm))
   (preprocess (pps
     ppx_jane
     lwt_ppx

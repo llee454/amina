@@ -16,7 +16,9 @@ longer be installed with brew.
 
 ```bash
 opam switch create . 5.0.0+options --no-install
+eval $(opam env)
 opam update
+opam upgrade
 opam install --deps-only . -y
 dune build
 dune runtest

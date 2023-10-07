@@ -1,9 +1,10 @@
 (lang dune 2.9)
+(name amina)
 (license GPL-3.0)
 (authors "Larry D. Lee Jr. <llee454@gmail.com>")
 (maintainers "Larry D. Lee Jr. <llee454@gmail.com>")
 (source (github llee454/amina))
-(version 0.5.0)
+(version 1.0.0)
 (generate_opam_files)
 (package
  (name amina)

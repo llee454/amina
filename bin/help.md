@@ -54,8 +54,8 @@ the textual content contained within the tag, CONTENT.
 
 Currently, there are two section tags recognized by Amina.
 
-The `each` tag takes a JSON path expression. The path expression must refer to a
-JSON array. It then expands CONTENT for every element within the array. For each
+The `each` tag takes a JSON path expression. When the path expression refers to
+a JSON array, it expands CONTENT for every element within the array. For each
 expansion, it sets the local JSON context to equal the associated JSON array
 element.
 
@@ -63,13 +63,23 @@ For example: `{#each:root.example_array}Item {data:local}{/each}` will read the
 JSON array "example_array" and, for each element of the array, print "Item: X",
 where X is the associated array element.
 
+If the JSON path expression does not refer to a JSON array, it sets the local
+JSON context equal to the referenced JSON value and expands CONTENT once using
+the JSON value.
+
 The `each-expr` tag is similar to the `each` tag, but it takes a Scheme
-expression instead of a JSON path expression. The Scheme expression has to
-evaluate to a Scheme list. It expands CONTENT for every list element and sets
+expression instead of a JSON path expression. When the Scheme expression
+evaluates to a Scheme list. It expands CONTENT for every list element and sets
 the local context to equal the element.
 
 For example: `{#each-expr:(list 1 2 3)}Item {data:local} {/each-expr}` returns a
 string like: "Item 1 Item 2 Item 3 ".
+
+If the JSON path expression does not evaluate to a list, it sets the local
+context equal to the referenced JSON value and expands CONTENT once.
+
+For example: `{#each-expr:3.14159}Item {data:local}{/each-expr}` returns a
+string like: "Item 3.14159".
 
 Amina's JSON path expressions use the following syntax:
 `(root|local)(FIELD|INDEX)*` where FIELD represents a field reference and is a

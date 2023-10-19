@@ -20,7 +20,7 @@
  (depends
   ocaml-lsp-server
   ocamlformat
-  ppx_jane
+  ppx_jane { >= "v0.16.0" }
   ppx_blob
   core
   lwt

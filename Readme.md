@@ -15,7 +15,7 @@ out of sync and opam's owl-plplot library requires library versions that can no
 longer be installed with brew.
 
 ```bash
-opam switch create . 5.0.0+options --no-install
+opam switch create . 5.1.0+options --no-install
 eval $(opam env)
 opam update
 opam upgrade

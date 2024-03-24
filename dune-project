@@ -20,11 +20,10 @@
  (depends
   ocaml-lsp-server
   ocamlformat
-  ppx_jane { >= "v0.16.0" }
+  ppx_jane
   ppx_blob
+  eio_main
   core
-  lwt
-  lwt_ppx
   yojson
   ppx_deriving_yojson
   guile

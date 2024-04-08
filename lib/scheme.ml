@@ -47,37 +47,55 @@ let define_pop_local_context () =
            any arguments yet you passed it one."
   )
 
-let define_float_to_string () =
-  Functions.register_fun2 "float-to-string" ~no_opt:1 ~rst:true (fun (x : scm) (args : scm) ->
+let define_num_to_string () =
+  Functions.register_fun2 "num->string" ~no_opt:1 ~rst:true (fun (x : scm) (args : scm) ->
       if Number.is_number x
       then (
         let decimals =
-          if Pair.is_cons args
-          then
-            if List.is_null args
-            then None
-            else (
-              match Pair.car args with
-              | arg when Number.is_integer arg -> Some (Number.int_from_raw arg)
-              | _ ->
-                failwith
-                  "Error: an error occured while trying to call float_to_string. Float_to_string accepts \
-                   one optional argument that specifies the number of decimal points to display and \
-                   which must be an integer. You passed a non integer value to float-to-string."
-            )
-          else
-            failwiths ~here:[%here]
-              "Error: an internal error occured while trying to call float_to_string. You called the \
-               function with optional arguments and Scheme did not return the optional arguments in a \
-               list."
-              () [%sexp_of: unit]
+          if List.is_null args
+          then None
+          else (
+            match Pair.car args with
+            | arg when Number.is_integer arg -> Some (Number.int_from_raw arg)
+            | _ ->
+              failwith
+                "Error: an error occured while trying to call num->string. Num->string accepts one \
+                 optional argument that specifies the number of decimal points to display and which must \
+                 be an integer. You passed a non integer value to num->string."
+          )
         in
         to_string x |> Float.of_string |> Float.to_string_hum ~delimiter:',' ?decimals |> String.to_raw
       )
       else
-        Error.error ~fn_name:"float_to_string"
-          "Error: an error occured while trying to call float_to_string. float_to_string can only be \
-           called on a floating point number. You did not pass a floating point number to it."
+        Error.error ~fn_name:"num->string"
+          "Error: an error occured while trying to call num->string. Num->string can only be called on a \
+           number. You did not pass a number to it."
+  )
+
+let define_string_to_num () =
+  Functions.register_fun1 "string->num" (fun (x : scm) ->
+      if String.is_string x
+      then (
+        let s =
+          String.from_raw x
+          |> Core.String.chop_prefix_if_exists ~prefix:"+"
+          |> Core.String.substr_replace_all ~pattern:"," ~with_:""
+          |> Core.String.substr_replace_all ~pattern:"_" ~with_:""
+        in
+        Float.of_string_opt s |> function
+        | Some value -> Number.Float.to_raw value
+        | None ->
+          Error.error ~fn_name:"string->num"
+            (sprintf
+               "Error: an error occured while trying to call string->num. The string that you passed \
+                \"%s\" does not represent a number."
+               s
+            )
+      )
+      else
+        Error.error ~fn_name:"string->num"
+          "Error: an error occured while trying to call string->num. String->num accepts a string as its \
+           only argument. You did not pass a string to it."
   )
 
 let init () =
@@ -86,7 +104,8 @@ let init () =
   and _ = define_get_data_aux ()
   and _ = define_push_local_context ()
   and _ = define_pop_local_context ()
-  and _ = define_float_to_string () in
+  and _ = define_num_to_string ()
+  and _ = define_string_to_num () in
   let _ = eval_string [%blob "init.scm"] in
   Gc.full_major ();
   ()

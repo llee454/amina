@@ -89,7 +89,7 @@ You can use this feature to print sorted, filtered, and otherwise transformed li
       (list 1 "first" 234.12 "this is the first")
       (list 2 "second" 1532.34 "this is another"))
     (lambda (x y) (> (list-ref x 2) (list-ref y 2))))
-}| {data:local[0]} | {data:local[1]} | {expr:(float-to-string (get-data "local[2]") 2)} | {data:local[3]} |
+}| {data:local[0]} | {data:local[1]} | {expr:(num->string (get-data "local[2]") 2)} | {data:local[3]} |
 {/each-expr}
 
 ### Integrating with SQLite

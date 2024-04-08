@@ -112,16 +112,28 @@ Examples:
 {expr:(get-data "local.name" (get-data "root.authors[0]"))}
 ```
 
-### float-to-string
+### num->string
 
-`(float-to-string <number> [decimals])` accepts two arguments: `<number>` a
+`(num->string <number> [decimals])` accepts two arguments: `<number>` a
 floating point number; and `[decimals]` and optional integer; and returns a
 string that represents `<number>`. If `[decimals]` is given, the string will
-display the given number of decimal point values.
+display the given number of decimal point values. When appropriate, this
+function will round the given number.
 
 Example:
 
-`(float-to-string 3.14159 2)`
+`(num->string 3.14159 2)`
+
+### string->num
+
+`(string->num <string>)` accepts one argument: `<string>` a string
+that represents a real number such as "-1,234.59"; and returns it as a
+Scheme real number. We recommend using this function instead of
+Guile's built in `string->number` function.
+
+Example:
+
+`(string->num "-1,234.59")`
 
 ### call-with-local-context
 

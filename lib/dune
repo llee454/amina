@@ -2,7 +2,8 @@
   (name amina)
   (libraries
     core
-    eio_main
+    lwt
+    lwt.unix
     guile.guile
     getopt
     angstrom
@@ -11,6 +12,7 @@
   (preprocessor_deps (file init.scm))
   (preprocess (pps
     ppx_jane
+    lwt_ppx
     ppx_deriving_yojson
     ppx_expect
     ppx_blob

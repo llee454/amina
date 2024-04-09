@@ -15,7 +15,7 @@ let specs =
       "version",
       Some
         (fun () ->
-          printf "Amina version 0.8.0\n";
+          printf "Amina version 0.8.1\n";
           exit 0),
       None );
     ( 'h',

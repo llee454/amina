@@ -66,20 +66,20 @@ end
     | _ -> None
     )
   |> Option.value_map ~default:`Null ~f:(fun json -> json)
-| _ ->
+| json ->
   failwithf
-    "Error: an error occured while trying to evaluate a JSON path. You applied a field reference \
-     (\"%s\") to a JSON value that is not an object."
-    field ()
+    !"Error: an error occured while trying to evaluate a JSON path. You applied a field reference \
+      (\"%s\") to a JSON value (\"%{Yojson.Safe.pretty_to_string}\") that is not an object."
+    field json ()
 
 let eval_index index = function
 | `Null -> `Null
 | `List xs | `Tuple xs -> begin (match List.nth xs index with Some json -> json | None -> `Null) end
-| _ ->
+| json ->
   failwithf
-    "Error: an error occured while trying to evaluate a JSON path. You applied an array reference to a \
-     JSON value that is not an array."
-    ()
+    !"Error: an error occured while trying to evaluate a JSON path. You applied an array reference to a \
+      JSON value (\"%{Yojson.Safe.pretty_to_string}\") that is not an array."
+    json ()
 
 let eval_with (context : Yojson.Safe.t) path =
   List.fold path.refs ~init:context ~f:(fun acc -> function

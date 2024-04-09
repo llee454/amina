@@ -20,14 +20,16 @@ let define_get_data_aux () =
       then (
         let root = Rewrite.get_root_json_context ()
         and local = Rewrite.get_local_json_context () in
+        let result = String.from_raw path |> Path.eval_string ~root ~local in
         if !debug_mode
         then
           eprintf
-            !"DEBUG path=\"%s\"\n\
-              local context=\"%{Yojson.Safe.pretty_to_string}\n\
-              root context=\"%{Yojson.Safe.pretty_to_string}\"\n"
-            (Guile.to_string path) local root;
-        String.from_raw path |> Path.eval_string ~root ~local |> [%sexp_of: Json.t] |> Guile.Sexp.to_raw
+            !"[DEBUG] path=\"%s\"\n\
+              [DEBUG] local context=\"%{Yojson.Safe.pretty_to_string}\n\
+              [DEBUG] root context=\"%{Yojson.Safe.pretty_to_string}\"\n\
+              [DEBUG] result=\"%{Yojson.Safe.pretty_to_string}\"\n"
+            (Guile.to_string path) local root result;
+        [%sexp_of: Json.t] result |> Guile.Sexp.to_raw
       )
       else
         Error.error ~fn_name:"get-data-aux"

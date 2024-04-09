@@ -28,6 +28,12 @@ Options
   Tells Amina to read FILENAME, which must contain valid Scheme code, and to
   evaluate it before processing data.
 
+  -x | --debug
+  Tells Amina to print out contexts and paths when evaluating
+  expressions. You can use this option to debug templates, however it
+  should not be enabled during production as this output will change
+  over time.
+
 Details
 -------
 

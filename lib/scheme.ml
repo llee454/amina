@@ -1,5 +1,6 @@
 open! Core
 open! Guile
+open Aux
 
 let null_scm = List.to_raw Fn.id []
 
@@ -16,12 +17,18 @@ let define_parse_path () =
 let define_get_data_aux () =
   Functions.register_fun1 "get-data-aux" (fun (path : scm) ->
       if String.is_string path
-      then
-        String.from_raw path
-        |> Path.eval_string ~root:(Rewrite.get_root_json_context ())
-             ~local:(Rewrite.get_local_json_context ())
-        |> [%sexp_of: Json.t]
-        |> Guile.Sexp.to_raw
+      then (
+        let root = Rewrite.get_root_json_context ()
+        and local = Rewrite.get_local_json_context () in
+        if !debug_mode
+        then
+          eprintf
+            !"DEBUG path=\"%s\"\n\
+              local context=\"%{Yojson.Safe.pretty_to_string}\n\
+              root context=\"%{Yojson.Safe.pretty_to_string}\"\n"
+            (Guile.to_string path) local root;
+        String.from_raw path |> Path.eval_string ~root ~local |> [%sexp_of: Json.t] |> Guile.Sexp.to_raw
+      )
       else
         Error.error ~fn_name:"get-data-aux"
           "Error: an error occured while trying to evaluate a call to get-data-aux. get-data-aux expects \

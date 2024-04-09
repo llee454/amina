@@ -15,7 +15,7 @@ let specs =
       "version",
       Some
         (fun () ->
-          printf "Amina version 0.8.1\n";
+          printf "Amina version 0.9.0\n";
           exit 0),
       None );
     ( 'h',
@@ -28,6 +28,7 @@ let specs =
     's', "init", None, Some (fun x -> scheme_filename_opt := Some x);
     'd', "json", None, Some (fun x -> data_filename_opt := Some x);
     't', "template", None, Some (fun x -> template_filename_opt := Some x);
+    'x', "debug", Some (fun () -> debug_mode := true), None;
   ]
 
 let () =

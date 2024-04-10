@@ -1,9 +1,3 @@
-(*
-  TODO:
-  - [ ] allow white space in expressions
-  - [ ] allow escaping braces
-*)
-
 open! Core
 open! Angstrom
 open! Aux
@@ -68,29 +62,17 @@ type grammar =
 [@@deriving sexp]
 
 let is_open_brace = Char.equal '{'
-
 let is_close_brace = Char.equal '}'
-
 let is_pound = Char.equal '#'
-
 let is_slash = Char.equal '/'
-
 let is_backslash = Char.equal '\\'
-
 let is_colon = Char.equal ':'
-
 let lex_open_brace = string "{"
-
 let lex_close_brace = string "}"
-
 let lex_colon = string ":"
-
 let lex_pound = string "#"
-
 let lex_slash = string "/"
-
 let lex_backslash = string "\\"
-
 let parse_escaped_char = lex_backslash *> any_char >>| String.of_char
 
 let%expect_test "parse_text" =
@@ -113,7 +95,8 @@ let%expect_test "parse_text" =
 
 let parse_tag_name =
   take_while1 (fun c ->
-      (not (is_colon c)) && (not (is_pound c)) && (not (is_slash c)) && not (is_close_brace c))
+      (not (is_colon c)) && (not (is_pound c)) && (not (is_slash c)) && not (is_close_brace c)
+  )
   >>| tag_type_of_string
 
 let parse_tag_content = take_till is_close_brace
@@ -150,8 +133,10 @@ let parse =
         (parse_text
         <|> parse_tag
         <|> ( parse_open_section_tag <&> recurse <* parse_close_section_tag
-            >>| fun ((tag, expr), content) -> Section (tag, expr, content) )
-        ))
+            >>| fun ((tag, expr), content) -> Section (tag, expr, content)
+            )
+        )
+  )
 
 let parse_string (template : string) =
   Angstrom.parse_string ~consume:All parse template |> function
@@ -209,7 +194,8 @@ and rewrite_each_section expr content =
         Stack.push json_context_stack next_json_context;
         let result = rewrite content in
         let _ = Stack.pop_exn json_context_stack in
-        result)
+        result
+    )
     |> String.concat
   | x ->
     Stack.push json_context_stack x;
@@ -224,7 +210,8 @@ and rewrite_each_expr_section expr content =
         Stack.push json_context_stack next_json_context;
         let result = rewrite content in
         let _ = Stack.pop_exn json_context_stack in
-        result)
+        result
+    )
     |> String.concat
   | x ->
     Stack.push json_context_stack x;
@@ -236,7 +223,8 @@ and rewrite content =
   List.map content ~f:(function
     | Text text -> rewrite_text text
     | Tag (tag, expr) -> rewrite_tag tag expr
-    | Section (tag, expr, content) -> rewrite_section tag expr content)
+    | Section (tag, expr, content) -> rewrite_section tag expr content
+    )
   |> String.concat
 
 (** Accepts a template string and expands the tags contained within it. *)

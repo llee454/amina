@@ -47,10 +47,11 @@ let define_get_data () =
     the Local context.
   *)
   Functions.register_fun2 "get-data" ~no_opt:1 ~rst:true (fun path json ->
+      if !debug_mode then eprintf !"[DEBUG] get-data json == %{Core.Sexp}\n" (Sexp.from_raw json);
       if List.is_null json
       then get_data_aux path
       else begin
-        let _ = Json.of_scm json |> Stack.push Rewrite.json_context_stack in
+        let _ = Json.of_scm (Pair.car json) |> Stack.push Rewrite.json_context_stack in
         let result = get_data_aux path in
         let _ = Stack.pop Rewrite.json_context_stack in
         result

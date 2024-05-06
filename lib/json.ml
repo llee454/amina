@@ -37,7 +37,7 @@ let rec of_scm x : Yojson.Safe.t =
         (to_string x) ()
   )
   | _ when Bool.is_bool x -> `Bool (Bool.from_raw x)
-  | _ when Number.is_integer x -> `Int (Number.int_from_raw x)
+  | _ when Number.is_exact_integer x -> `Int (Number.int_from_raw x)
   | _ when Number.is_number x -> `Float (Number.Float.from_raw x)
   | _ when Char.is_char x -> `String (Char.from_raw x |> Core.String.of_char)
   | _ when String.is_string x -> `String (String.from_raw x)

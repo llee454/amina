@@ -4,7 +4,7 @@
 (authors "Larry D. Lee Jr. <llee454@gmail.com>")
 (maintainers "Larry D. Lee Jr. <llee454@gmail.com>")
 (source (github llee454/amina))
-(version 1.0.0)
+(version 0.11.0)
 (generate_opam_files)
 (package
  (name amina)

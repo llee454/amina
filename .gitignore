@@ -2,3 +2,4 @@ _build
 _opam
 example
 .DS_Store
+settings.json

@@ -4,7 +4,8 @@
 (authors "Larry D. Lee Jr. <llee454@gmail.com>")
 (maintainers "Larry D. Lee Jr. <llee454@gmail.com>")
 (source (github llee454/amina))
-(version 0.11.0)
+(version 0.13.0)
+(use_standard_c_and_cxx_flags true)
 (generate_opam_files)
 (package
  (name amina)
@@ -27,8 +28,8 @@
   lwt_ppx
   yojson
   ppx_deriving_yojson
-  guile
   getopt
   angstrom
+  conf-guile
  )
 )

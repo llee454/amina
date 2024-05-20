@@ -15,7 +15,7 @@ out of sync and opam's owl-plplot library requires library versions that can no
 longer be installed with brew.
 
 ```bash
-opam switch create . 5.1.0+options --no-install
+opam switch create . 5.1.1+options --no-install
 eval $(opam env)
 opam update
 opam upgrade
@@ -30,6 +30,19 @@ Once you have compiled Amina and tested any new changes you can install Amina to
 ```bash
 dune install
 ```
+
+Installation
+------------
+
+Amina depends on the following dynamically linked C libraries:
+
+1. Guile - libguile-3.0
+2. Unistring - libunistring
+3. GC - libgc
+4. GMP - libgmp
+5. FFI - libffi
+
+If you install Amina directly as a binary executable, you must ensure that these libraries are available on your system under /usr/local/lib.
 
 Execution
 ---------

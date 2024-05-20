@@ -1,9 +1,10 @@
 open! Core
 open! Lwt.Syntax
 open! Lwt.Infix
-open! Amina
 open! Getopt
+open! Amina
 open! Aux
+open! Amina_guile
 
 let scheme_filename_opt = ref None
 let data_filename_opt = ref None
@@ -15,7 +16,7 @@ let specs =
       "version",
       Some
         (fun () ->
-          printf "Amina version 0.11.0\n";
+          printf "Amina version 0.13.0\n";
           exit 0),
       None );
     ( 'h',
@@ -29,6 +30,7 @@ let specs =
     'd', "json", None, Some (fun x -> data_filename_opt := Some x);
     't', "template", None, Some (fun x -> template_filename_opt := Some x);
     'x', "debug", Some (fun () -> debug_mode := true), None;
+    'w', "warn", Some (fun () -> warn_mode := true), None;
   ]
 
 let () =
@@ -46,9 +48,10 @@ let () =
            end
            >|= Yojson.Safe.from_string
          in
+         init_guile ();
          Scheme.init ();
          Option.iter !scheme_filename_opt ~f:(fun filename ->
-             let _ = Guile.load filename in
+             let _ = load filename in
              ()
          );
          let* template = read_file ~filename:template_filename in

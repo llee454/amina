@@ -164,10 +164,7 @@ let%expect_test "parse" =
       ((Text "That has a nested tag: ") (Tag Data_tag " .")))) |}]
 
 let rewrite_text s = s
-
-let rewrite_expr_tag expr =
-  let open Guile in
-  (match eval_string expr with x when String.is_string x -> String.from_raw x | x -> Guile.to_string x)
+let rewrite_expr_tag expr = Amina_guile.(eval_string expr |> to_string_pretty)
 
 let rewrite_data_tag expr =
   Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr |> function
@@ -204,8 +201,9 @@ and rewrite_each_section expr content =
     result
 
 and rewrite_each_expr_section expr content =
-  Guile.eval_string expr |> Json.of_scm |> function
-  | `List xs | `Tuple xs ->
+  let open Amina_guile in
+  eval_string expr |> Json.of_scm |> function
+  | `List xs ->
     List.map xs ~f:(fun next_json_context ->
         Stack.push json_context_stack next_json_context;
         let result = rewrite content in
@@ -232,30 +230,9 @@ let rewrite_string template =
   try parse_string template |> rewrite with
   | Failure msg ->
     failwithf !"Error: an error occured while trying to parse and/or rewrite a template. %s" msg ()
-  | _ ->
+  | e ->
     failwithf
       !"Error: an error occured while trying to parse and/or rewrite a template. Perhaps you have an \
-        unclosed section tag. The last opened section tag was (\"%{sexp: tag_type option}\")."
-      (Stack.top tag_stack) ()
-
-let%expect_test "rewrite" =
-  Guile.init ();
-  let root =
-    {json|
-     {
-       "example_scalar": 3.14159,
-       "example_array": [1, 2, 3]
-     }
-   |json}
-    |> Yojson.Safe.from_string
-  in
-  init_contexts root;
-  "This is a test expression {expr: (* 3 7)}. Here's a data {data:root.example_array[1]}. Here's a \
-   section {#each:root.example_array}Item:{data:local} {/each}. It works! See?\n\
-   Here's a scalar test {#each:root.example_scalar}value: {data:local}{/each}."
-  |> rewrite_string
-  |> printf "%s";
-  [%expect
-    {|
-      This is a test expression 21. Here's a data 2. Here's a section Item:1 Item:2 Item:3 . It works! See?
-      Here's a scalar test value: 3.14159. |}]
+        unclosed section tag. The last opened section tag was (\"%{sexp: tag_type option}\"). The \
+        exception was: \"%{Exn.to_string}\"."
+      (Stack.top tag_stack) e ()

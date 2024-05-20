@@ -3,6 +3,7 @@ open! Lwt.Syntax
 open! Lwt.Infix
 
 let debug_mode = ref false
+let warn_mode = ref false
 let ( <| ) f g x = f (g x)
 let overwrite_flags = Lwt_unix.[ O_WRONLY; O_NONBLOCK; O_CREAT; O_TRUNC ]
 let read_flags = Lwt_unix.[ O_RDONLY; O_NONBLOCK ]

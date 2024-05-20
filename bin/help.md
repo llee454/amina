@@ -28,6 +28,12 @@ Options
   Tells Amina to read FILENAME, which must contain valid Scheme code, and to
   evaluate it before processing data.
 
+  -w | --warn
+  Tells Amina to print out warnings whenever it detects that you are
+  doing something that may be a mistake. For example, whenever Amina
+  references a null value in a data expression, it will print a
+  warning to STDERR.
+
   -x | --debug
   Tells Amina to print out contexts and paths when evaluating
   expressions. You can use this option to debug templates, however it

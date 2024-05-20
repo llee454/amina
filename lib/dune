@@ -4,9 +4,9 @@
     core
     lwt
     lwt.unix
-    guile.guile
     getopt
     angstrom
+    amina_guile
   )
   (inline_tests)
   (preprocessor_deps (file init.scm))

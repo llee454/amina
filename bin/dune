@@ -6,9 +6,9 @@
    lwt
    lwt.unix
    amina
-   guile.guile
    getopt
    angstrom
+   amina_guile
  )
   (preprocessor_deps (file help.md))
   (preprocess (pps
@@ -19,4 +19,9 @@
     ppx_blob
   ))
   (modes exe)
+  (link_flags
+   ; enable the following lines to test for pointer usage
+   (-cclib -g -cclib -fsanitize=address)
+   (-cclib -g -cclib -fsanitize=undefined)
+  )
 )

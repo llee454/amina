@@ -103,21 +103,19 @@ let rec sexp_of_scm (x : scm) : Sexplib.Sexp.t =
   if is_pair x then List (from_list ~f:sexp_of_scm x) else Atom (to_string x)
 
 module Json = struct
-  include Yojson.Safe
+  include Yojson.Basic
 
-  let to_scm json =
-    let rec f : Yojson.Basic.t -> scm = function
-    | `Null -> eol ()
-    | `Bool b -> to_bool b
-    | `Int n -> to_integer n
-    | `Float x -> to_double x
-    | `String s -> string_to_string s
-    | `Assoc xs -> List.map xs ~f:(fun (key, data) -> to_list [ string_to_string key; f data ]) |> to_list
-    | `List xs -> to_list (List.map xs ~f)
-    in
-    f (Yojson.Safe.to_basic json)
+  let rec to_scm : Yojson.Basic.t -> scm = function
+  | `Null -> eol ()
+  | `Bool b -> to_bool b
+  | `Int n -> to_integer n
+  | `Float x -> to_double x
+  | `String s -> string_to_string s
+  | `Assoc xs ->
+    List.map xs ~f:(fun (key, data) -> to_list [ string_to_string key; to_scm data ]) |> to_list
+  | `List xs -> to_list (List.map xs ~f:to_scm)
 
-  let rec of_scm (x : scm) : Yojson.Safe.t =
+  let rec of_scm (x : scm) : Yojson.Basic.t =
     match () with
     | () when is_null x -> `List []
     | () when is_pair x -> `List (from_list ~f:of_scm x)

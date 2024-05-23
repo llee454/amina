@@ -54,7 +54,7 @@ let%expect_test "parse1" =
   parse_string "root.example[0]" |> printf !"%{sexp: path}";
   [%expect {| ((base Root) (refs ((Field example) (Index 0)))) |}]
 
-let eval_field field : Yojson.Safe.t -> Yojson.Safe.t = function
+let eval_field field : Yojson.Basic.t -> Yojson.Basic.t = function
 | `Null -> `Null
 | `Assoc xs -> begin
   (match List.Assoc.find ~equal:String.equal xs field with Some json -> json | None -> `Null)
@@ -69,24 +69,27 @@ end
 | json ->
   failwithf
     !"Error: an error occured while trying to evaluate a JSON path. You applied a field reference \
-      (\"%s\") to a JSON value (\"%{Yojson.Safe.pretty_to_string}\") that is not an object."
+      (\"%s\") to a JSON value (\"%{Yojson.Basic.pretty_to_string}\") that is not an object."
     field json ()
 
-let eval_index index = function
+let eval_index index : Yojson.Basic.t -> Yojson.Basic.t = function
 | `Null -> `Null
-| `List xs | `Tuple xs -> begin (match List.nth xs index with Some json -> json | None -> `Null) end
+| `List xs -> begin (match List.nth xs index with Some json -> json | None -> `Null) end
+| `Assoc xs -> begin
+  (match List.nth xs index with Some (key, json) -> `List [ `String key; json ] | None -> `Null)
+end
 | json ->
   failwithf
     !"Error: an error occured while trying to evaluate a JSON path. You applied an array reference to a \
-      JSON value (\"%{Yojson.Safe.pretty_to_string}\") that is not an array."
+      JSON value (\"%{Yojson.Basic.pretty_to_string}\") that is not an array."
     json ()
 
-let eval_with (context : Yojson.Safe.t) path =
+let eval_with (context : Yojson.Basic.t) path =
   List.fold path.refs ~init:context ~f:(fun acc -> function
     | Field field -> eval_field field acc | Index index -> eval_index index acc
   )
 
-let eval ~(root : Yojson.Safe.t) ~(local : Yojson.Safe.t) (path : path) =
+let eval ~(root : Yojson.Basic.t) ~(local : Yojson.Basic.t) (path : path) =
   let init = (match path.base with Root -> root | Local -> local) in
   eval_with init path
 
@@ -105,7 +108,7 @@ let%expect_test "eval_string" =
     {
       "example": [1, 2, 3]
     }
-  |json} |> Yojson.Safe.from_string in
+  |json} |> Yojson.Basic.from_string in
   let local = root in
-  eval_string ~root ~local "root.example[0]" |> printf !"%{Yojson.Safe.pretty_to_string}";
+  eval_string ~root ~local "root.example[0]" |> printf !"%{Yojson.Basic.pretty_to_string}";
   [%expect {| 1 |}]

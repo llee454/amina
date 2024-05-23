@@ -24,7 +24,7 @@ let tag_type_to_string = function
 
 let root_json_context = ref None
 
-let get_root_json_context () : Yojson.Safe.t =
+let get_root_json_context () : Yojson.Basic.t =
   match !root_json_context with
   | None ->
     failwith
@@ -34,7 +34,7 @@ let get_root_json_context () : Yojson.Safe.t =
 
 let json_context_stack = Stack.create ()
 
-let get_local_json_context () : Yojson.Safe.t =
+let get_local_json_context () : Yojson.Basic.t =
   match Stack.top json_context_stack with
   | None ->
     failwith
@@ -149,7 +149,7 @@ let%expect_test "parse" =
       "example_array": [1, 2, 3]
     }
   |json}
-  |> Yojson.Safe.from_string
+  |> Yojson.Basic.from_string
   |> Stack.push json_context_stack;
   "This is an expression {expr: (* 3 7)} and this is a section {#each: .example_array}That has a nested \
    tag: {data: .}{/each}"
@@ -170,7 +170,7 @@ let rewrite_data_tag expr =
   Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr |> function
   | `Null -> ""
   | `String string -> string
-  | json -> Yojson.Safe.pretty_to_string json
+  | json -> Yojson.Basic.pretty_to_string json
 
 let rewrite_tag = function
 | Expr_tag -> rewrite_expr_tag
@@ -185,8 +185,7 @@ let rec rewrite_section = function
 | Each_expr_tag -> rewrite_each_expr_section
 
 and rewrite_each_section expr content =
-  match Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr with
-  | `List xs | `Tuple xs ->
+  let rewrite_list xs =
     List.map xs ~f:(fun next_json_context ->
         Stack.push json_context_stack next_json_context;
         let result = rewrite content in
@@ -194,6 +193,10 @@ and rewrite_each_section expr content =
         result
     )
     |> String.concat
+  in
+  match Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr with
+  | `List xs -> rewrite_list xs
+  | `Assoc xs -> List.map xs ~f:(fun (key, x) -> `List [ `String key; x ]) |> rewrite_list
   | x ->
     Stack.push json_context_stack x;
     let result = rewrite content in

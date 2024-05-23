@@ -23,9 +23,9 @@ include Amina_guile.Make_amina_api (struct
       then
         eprintf
           !"[DEBUG] path=\"%s\"\n\
-            [DEBUG] local context=\"%{Yojson.Safe.pretty_to_string}\n\
-            [DEBUG] root context=\"%{Yojson.Safe.pretty_to_string}\"\n\
-            [DEBUG] result=\"%{Yojson.Safe.pretty_to_string}\"\n"
+            [DEBUG] local context=\"%{Yojson.Basic.pretty_to_string}\n\
+            [DEBUG] root context=\"%{Yojson.Basic.pretty_to_string}\"\n\
+            [DEBUG] result=\"%{Yojson.Basic.pretty_to_string}\"\n"
           (to_string path) local root result;
       (* [%sexp_of: Json.t] result |> scm_of_sexp *)
       Json.to_scm result
@@ -132,7 +132,7 @@ let%expect_test "rewrite" =
        "example_array": [1, 2, 3]
      }
    |json}
-    |> Yojson.Safe.from_string
+    |> Yojson.Basic.from_string
   in
   init_contexts root;
   "This is a test expression {expr: (* 3 7)}. Here's a data {data:root.example_array[1]}. Here's a \

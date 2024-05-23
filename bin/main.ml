@@ -46,7 +46,7 @@ let () =
              | None -> Lwt_io.read Lwt_io.stdin
              | Some data_filename -> read_file ~filename:data_filename
            end
-           >|= Yojson.Safe.from_string
+           >|= Yojson.Basic.from_string
          in
          init_guile ();
          Scheme.init ();

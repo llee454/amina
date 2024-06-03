@@ -7,6 +7,7 @@ open! Aux
 open! Amina_guile
 
 let scheme_filename_opt = ref None
+let no_data = ref false
 let data_filename_opt = ref None
 let template_filename_opt = ref None
 
@@ -16,7 +17,7 @@ let specs =
       "version",
       Some
         (fun () ->
-          printf "Amina version 0.14.0\n";
+          printf "Amina version 0.15.0\n";
           exit 0),
       None );
     ( 'h',
@@ -31,6 +32,7 @@ let specs =
     't', "template", None, Some (fun x -> template_filename_opt := Some x);
     'x', "debug", Some (fun () -> debug_mode := true), None;
     'w', "warn", Some (fun () -> warn_mode := true), None;
+    'n', "no-json", Some (fun () -> no_data := true), None;
   ]
 
 let () =
@@ -41,21 +43,24 @@ let () =
        | None -> failwith "Error: Invalid command line. The template file is required."
        | Some template_filename ->
          let* root =
-           begin
-             match !data_filename_opt with
-             | None -> Lwt_io.read Lwt_io.stdin
-             | Some data_filename -> read_file ~filename:data_filename
-           end
-           >|= Yojson.Basic.from_string
+           if !no_data
+           then Lwt.return `Null
+           else
+             begin
+               match !data_filename_opt with
+               | None -> Lwt_io.read Lwt_io.stdin
+               | Some data_filename -> read_file ~filename:data_filename
+             end
+             >|= Yojson.Basic.from_string
          in
          init_guile ();
          Scheme.init ();
+         Rewrite.init_contexts root;
          Option.iter !scheme_filename_opt ~f:(fun filename ->
              let _ = load filename in
              ()
          );
          let* template = read_file ~filename:template_filename in
-         Rewrite.init_contexts root;
          Rewrite.rewrite_string template |> printf "%s";
          Lwt.return_unit
      end

@@ -24,6 +24,11 @@ Options
   Tells Amina to read FILENAME instead of STDIN to get the JSON data that it
   will use to replace tags in the template file.
 
+  -n | --no-json
+  Tells Amina that you will not provide JSON data. Thus, Amina will not wait for
+  input via STDIN, but will expand the given template file in an empty data
+  context.
+
   -s | --init FILENAME
   Tells Amina to read FILENAME, which must contain valid Scheme code, and to
   evaluate it before processing data.

@@ -61,9 +61,11 @@ external is_bool : scm -> bool = "amina_is_bool"
 external is_char : scm -> bool = "amina_is_char"
 external is_null : scm -> bool = "amina_is_null"
 external is_pair : scm -> bool = "amina_is_pair"
+external is_vector : scm -> bool = "amina_is_vector"
 external cons : scm -> scm -> scm = "amina_cons"
 external car : scm -> scm = "amina_car"
 external cdr : scm -> scm = "amina_cdr"
+external vector_to_list : scm -> scm = "amina_vector_to_list"
 external from_integer : scm -> int = "amina_from_integer"
 external from_double : scm -> float = "amina_from_double"
 external from_bool : scm -> bool = "amina_from_bool"
@@ -89,6 +91,15 @@ let to_list (xs : scm list) : scm = List.fold_right xs ~init:(eol ()) ~f:cons
 let rec from_list ~(f : scm -> 'a) (x : scm) : 'a List.t =
   if is_pair x then f (car x) :: from_list ~f (cdr x) else if is_null x then [] else [ f x ]
 
+(**
+  Accepts two arguments: [f], a function that accepts a Scheme value
+  and returns some value; and [x], a scheme vector; and returns a
+  list of [f x0, f x1, ...].
+*)
+let from_vector ~(f : scm -> 'a) (x : scm) : 'a List.t =
+  if is_vector x then from_list ~f (vector_to_list x) else if is_null x then [] else [ f x ]
+    
+
 let rec scm_of_sexp : Sexplib.Sexp.t -> scm = function
 | Atom s -> (
   match Int.of_string_opt s with
@@ -100,7 +111,12 @@ let rec scm_of_sexp : Sexplib.Sexp.t -> scm = function
 | List xs -> List.map xs ~f:scm_of_sexp |> to_list
 
 let rec sexp_of_scm (x : scm) : Sexplib.Sexp.t =
-  if is_pair x then List (from_list ~f:sexp_of_scm x) else Atom (to_string x)
+  if is_pair x
+  then List (from_list ~f:sexp_of_scm x)
+  else if is_vector x
+    then List (from_vector ~f:sexp_of_scm x)
+  else
+    Atom (to_string x)
 
 module Json = struct
   include Yojson.Basic
@@ -119,6 +135,7 @@ module Json = struct
     match () with
     | () when is_null x -> `List []
     | () when is_pair x -> `List (from_list ~f:of_scm x)
+    | () when is_vector x -> `List (from_vector ~f:of_scm x)
     | () when is_bool x -> `Bool (from_bool x)
     | () when is_exact_integer x -> `Int (from_integer x)
     | () when is_number x -> `Float (from_double x)

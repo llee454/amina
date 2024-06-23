@@ -147,6 +147,11 @@ CAMLprim value amina_is_pair (value x) {
   CAMLreturn (Val_bool (scm_is_pair (amina_from_ocaml (x))));
 }
 
+CAMLprim value amina_is_vector (value x) {
+  CAMLparam1 (x);
+  CAMLreturn (Val_bool (scm_is_vector (amina_from_ocaml (x))));
+}
+
 /**
   Accepts an OCaml Scheme object x that represents an integer and
   returns an OCaml integer.
@@ -232,6 +237,11 @@ CAMLprim value amina_car (value x) {
 CAMLprim value amina_cdr (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (SCM_CDR (amina_from_ocaml (x))));
+}
+
+CAMLprim value amina_vector_to_list (value x) {
+  CAMLparam1 (x);
+  CAMLreturn (amina_to_ocaml (scm_vector_to_list (amina_from_ocaml (x))));
 }
 
 /**

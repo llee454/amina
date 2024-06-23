@@ -21,7 +21,7 @@
   (modes exe)
   (link_flags
    ; enable the following lines to test for pointer usage
-   (-cclib -g -cclib -fsanitize=address)
-   (-cclib -g -cclib -fsanitize=undefined)
+   ; (-cclib -g -cclib -fsanitize=address)
+   ; (-cclib -g -cclib -fsanitize=undefined)
   )
 )

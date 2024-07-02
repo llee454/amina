@@ -31,7 +31,9 @@ Options
 
   -s | --init FILENAME
   Tells Amina to read FILENAME, which must contain valid Scheme code, and to
-  evaluate it before processing data.
+  evaluate it before processing data. Note: if you need to include
+  Scheme files that are not included in the standard Guile search
+  path, use the GUILE_LOAD_PATH environment variable.
 
   -w | --warn
   Tells Amina to print out warnings whenever it detects that you are

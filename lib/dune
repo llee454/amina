@@ -9,7 +9,6 @@
     amina_guile
   )
   (inline_tests)
-  (preprocessor_deps (file init.scm))
   (preprocess (pps
     ppx_jane
     lwt_ppx

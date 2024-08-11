@@ -82,12 +82,22 @@ let%expect_test "parse_text" =
   |> printf "%s";
   [%expect {| { |}]
 
+let parse_text_token =
+  let* n = available in
+  if n < 2 then any_char
+  else 
+    let* s = Angstrom.peek_string 2 in
+    match String.to_list s with
+    | ['\\'; c] -> advance 2 *> return c
+    | ['{'; '{'] -> fail "Encountered the start of an Amina open tag while looking for a text token."
+    | _ -> any_char
+
 let parse_text =
-  many1 (parse_escaped_char <|> take_while1 (fun c -> (not (is_open_brace c)) && not (is_backslash c)))
-  >>| fun xs -> Text (String.concat xs)
+  let+ cs = many1 (parse_text_token) in
+  Text (String.of_char_list cs)
 
 let%expect_test "parse_text" =
-  {|This is a test. \{not a tag\\} {expr: 55}|}
+  {|This is a test. \{not a tag\\} {{expr: 55}}|}
   |> Angstrom.parse_string ~consume:Prefix parse_text
   |> Result.ok_or_failwith
   |> printf !"%{sexp: grammar}";
@@ -102,24 +112,24 @@ let parse_tag_name =
 let parse_tag_content = take_till is_close_brace
 
 let parse_tag =
-  lex_open_brace *> parse_tag_name <&> lex_colon *> parse_tag_content <* lex_close_brace >>| fun (t, s) ->
+  lex_open_brace *> lex_open_brace *> parse_tag_name <&> lex_colon *> parse_tag_content <* lex_close_brace <* lex_close_brace >>| fun (t, s) ->
   Tag (t, s)
 
 let%expect_test "parse_tag" =
-  "{expr: 55}"
+  "{{expr: 55}}"
   |> Angstrom.parse_string ~consume:All parse_tag
   |> Result.ok_or_failwith
   |> printf !"%{sexp: grammar}";
   [%expect {| (Tag Expr_tag " 55") |}]
 
 let parse_open_section_tag =
-  lex_open_brace *> lex_pound *> parse_tag_name <&> lex_colon *> parse_tag_content <* lex_close_brace
+  lex_open_brace *> lex_open_brace *> lex_pound *> parse_tag_name <&> lex_colon *> parse_tag_content <* lex_close_brace <* lex_close_brace
   >>| fun (tag, s) ->
   Stack.push tag_stack tag;
   tag, s
 
 let parse_close_section_tag =
-  lex_open_brace *> lex_slash *> parse_tag_name <* lex_close_brace >>| fun tag ->
+  lex_open_brace *> lex_open_brace *> lex_slash *> parse_tag_name <* lex_close_brace <* lex_close_brace >>| fun tag ->
   match Stack.pop tag_stack with
   | Some curr_tag when [%equal: tag_type] curr_tag tag -> ()
   | Some curr_tag ->
@@ -151,8 +161,8 @@ let%expect_test "parse" =
   |json}
   |> Yojson.Basic.from_string
   |> Stack.push json_context_stack;
-  "This is an expression {expr: (* 3 7)} and this is a section {#each: .example_array}That has a nested \
-   tag: {data: .}{/each}"
+  "This is an expression {{expr: (* 3 7)}} and this is a section {{#each: .example_array}}That has a nested \
+   tag: {{data: .}}{{/each}}"
   |> Angstrom.parse_string ~consume:All parse
   |> Result.ok_or_failwith
   |> printf !"%{sexp: grammar list}";

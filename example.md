@@ -6,7 +6,7 @@
 
 Amina is a modern templating language. It takes a JSON file and a text file, called a "template file," that contains tags and replaces these tags with values either drawn from the JSON file or calculated.
 
-Amina's syntax is similar to Mustache's. There are three types of tags: scalar tags and section tags. Scalar tags contain either JSON path expressions such as: `\{data:root.example_array[1]}`; or Scheme expressions such as `\{expr:(* 3 7)}`. When Amina encounters a JSON path expression, it reads the JSON file, finds the JSON value referenced by the path expression, and replaces the tag with the JSON value. When Amina encounters a Scheme expression, it calls Guile, a Scheme interpreter, evaluates the expression, and replaces the tag with the calculated value.
+Amina's syntax is similar to Mustache's. There are three types of tags: scalar tags and section tags. Scalar tags contain either JSON path expressions such as: `\{{data:root.example_array[1]}}`; or Scheme expressions such as `\{{expr:(* 3 7)}}`. When Amina encounters a JSON path expression, it reads the JSON file, finds the JSON value referenced by the path expression, and replaces the tag with the JSON value. When Amina encounters a Scheme expression, it calls Guile, a Scheme interpreter, evaluates the expression, and replaces the tag with the calculated value.
 
 JSON path expressions have the following syntax:
 
@@ -21,7 +21,7 @@ For example: `root.example_array[0]` is a valid JSON path expression. Every path
 
 The remaining elements of the path are either field references or array indices. If you have a JSON object `.<field name>` will reference the named field. If you have an array `[n]` will refer to the n-th element. So, the example given above tells Amina to take the root JSON value, find the field named "example_array," and return its first element.
 
-I've touched on sections. Sections have the form: `\{#tag:<expression>}<content>\{/tag}`. These tags have two effects. First, they define a "local context," Amina will evaluate `<expression>` and assign the local JSON value to the result. All JSON path references to "local" will refer to either this JSON value or, if its an array, one of its elements. Secondly, if the result is an array value, Amina may duplicate `<content>` for each element in the array.
+I've touched on sections. Sections have the form: `\{{#tag:<expression>}}<content>\{{/tag}}`. These tags have two effects. First, they define a "local context," Amina will evaluate `<expression>` and assign the local JSON value to the result. All JSON path references to "local" will refer to either this JSON value or, if its an array, one of its elements. Secondly, if the result is an array value, Amina may duplicate `<content>` for each element in the array.
 
 ### Motivation
 
@@ -38,23 +38,23 @@ This file is an example template. It contains Markdown interspersed with Amina t
 For example, Amina will replace the following tag with the value of the root JSON value, which will equal the JSON file's JSON value.
 
 ```json
-{data:root}
+{{data:root}}
 ```
 
-As shown above, you can reference specific values within the root JSON value by adding additional field and array indices. For example: `{data:root.example_array[0].message}`.
+As shown above, you can reference specific values within the root JSON value by adding additional field and array indices. For example: `{{data:root.example_array[0].message}}`.
 
 ### Scheme Expression Example
 
 You can execute arbitrary Scheme expressions in your template file. Amina will evaluate these expressions and replace the tags with the resulting values. Additionally, Amina defines a function named `get-data <path>` that accepts a JSON path expression in a Scheme string and returns the referenced data. So, for example, the following scheme expression tag is equivalent to our previous JSON path expression tag.
 
 ```
-{expr:(get-data "root.example_array[0].message")}
+{{expr:(get-data "root.example_array[0].message")}}
 ```
 
 Of course, you can call all of the functions that Guile defines. For example, Amina will read the message referenced in the previous example, but uppercase it using Schemes' uppercase function.
 
 ```
-{expr:(string-upcase (get-data "root.example_array[0].message"))}
+{{expr:(string-upcase (get-data "root.example_array[0].message"))}}
 ```
 
 ### Each Path Expression Section Example
@@ -63,8 +63,8 @@ Often, we want to display some snippet of text for each element of an array. For
 
 | Name | Message |
 | ---- | ------- |
-{#each:root.example_array}| {data:local.name} | {data:local.message} |
-{/each}
+{{#each:root.example_array}}| {{data:local.name}} | {{data:local.message}} |
+{{/each}}
 
 ### Each Scheme Expression Section Example
 
@@ -72,25 +72,25 @@ Amina lets you define your own local contexts using Scheme. For example, the fol
 
 | ID | Name | Message |
 | -- | ---- | ------- |
-{#each-expr:
+{{#each-expr:
   (list
     (list 1 "first" "this is the first")
     (list 2 "second" "this is another"))
-}| {data:local[0]} | {data:local[1]} | {data:local[2]} |
-{/each-expr}
+}}| {{data:local[0]}} | {{data:local[1]}} | {{data:local[2]}} |
+{{/each-expr}}
 
 You can use this feature to print sorted, filtered, and otherwise transformed lists.
 
 | ID | Name | Income | Notes |
 | -- | ---- | ------ | ----- |
-{#each-expr:
+{{#each-expr:
   (sort
     (list
       (list 1 "first" 234.12 "this is the first")
       (list 2 "second" 1532.34 "this is another"))
     (lambda (x y) (> (list-ref x 2) (list-ref y 2))))
-}| {data:local[0]} | {data:local[1]} | {expr:(num->string (get-data "local[2]") 2)} | {data:local[3]} |
-{/each-expr}
+}}| {{data:local[0]}} | {{data:local[1]}} | {{expr:(num->string (get-data "local[2]") 2)}} | {{data:local[3]}} |
+{{/each-expr}}
 
 ### Integrating with SQLite
 

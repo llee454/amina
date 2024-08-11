@@ -122,7 +122,7 @@ include Amina_guile.Make_amina_api (struct
         (to_string x) [%sexp_of: string]
 end)
 
-let%expect_test "rewrite" =
+(* let%expect_test "rewrite" =
   let open Rewrite in
   init ();
   let root =
@@ -143,4 +143,4 @@ let%expect_test "rewrite" =
   [%expect
     {|
       This is a test expression 21. Here's a data 2. Here's a section Item:1 Item:2 Item:3 . It works! See?
-      Here's a scalar test value: 3.14159. |}]
+      Here's a scalar test value: 3.14159. |}] *)

@@ -1,4 +1,4 @@
-Version: 1.0.0
+Version: 1.1.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -109,6 +109,8 @@ integer).
 
 For example: `root.example_array[0]` is a JSON path expression that references
 the first element of the array stored in the field named "example_array".
+
+Note that you can escape curly braces by using `\{`.
 
 Scheme Functions
 ----------------

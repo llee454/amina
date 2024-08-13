@@ -88,7 +88,8 @@ let parse_text_token =
   else 
     let* s = Angstrom.peek_string 2 in
     match String.to_list s with
-    | ['\\'; c] -> advance 2 *> return c
+    | ['\\'; '{'] -> advance 2 *> return '{'
+    | ['\\'; '\\'] -> advance 2 *> return '\\'
     | ['{'; '{'] -> fail "Encountered the start of an Amina open tag while looking for a text token."
     | _ -> any_char
 
@@ -101,7 +102,7 @@ let%expect_test "parse_text" =
   |> Angstrom.parse_string ~consume:Prefix parse_text
   |> Result.ok_or_failwith
   |> printf !"%{sexp: grammar}";
-  [%expect {| (Text "This is a test. {not a tag\\} ") |}]
+  [%expect {| (Text "This is a test. {not a tag\\\\} ") |}]
 
 let parse_tag_name =
   take_while1 (fun c ->

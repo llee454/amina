@@ -92,6 +92,10 @@ You can use this feature to print sorted, filtered, and otherwise transformed li
 }}| {{data:local[0]}} | {{data:local[1]}} | {{expr:(num->string (get-data "local[2]") 2)}} | {{data:local[3]}} |
 {{/each-expr}}
 
+### Eval Section Example
+
+The following tag generates Amina code: {{#eval}}{{data:root.example}}{{/eval}}
+
 ### Integrating with SQLite
 
 Most databases support JSON exports. For example, SQLite can be used to generate JSON strings as follows:

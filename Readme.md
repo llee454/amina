@@ -83,7 +83,7 @@ When Amina encounters a section tag it may do two things. First, it may create a
 new "local context" based on EXPR. Second, it may duplicate, hide, or display
 the textual content contained within the tag, CONTENT.
 
-Currently, there are two section tags recognized by Amina.
+Currently, there are three section tags recognized by Amina.
 
 The `each` tag takes a JSON path expression. The path expression must refer to a
 JSON array. It then expands CONTENT for every element within the array. For each
@@ -101,6 +101,25 @@ the local context to equal the element.
 
 For example: `{{#each-expr:(list 1 2 3)}}Item {{data:local}} {{/each-expr}}` returns a
 string like: "Item 1 Item 2 Item 3 ".
+
+The `eval` tag is special. It tells Amina to expand its content and then
+double back and expand the result again. This can be useful when you have
+an Amina expression that generates Amina code.
+
+For example, imagine that we call Amina with the following JSON and template
+files. Amina will expand the example string and then double back to expand
+the nested Amina expression.
+
+```json
+{
+  "pi": 3.14159,
+  "example": "PI equals {{data:root.pi}}"
+}
+```
+
+```
+{{#eval}}The following tag generates Amina code: {{data:root.example}}{{/eval}}
+```
 
 Amina's JSON path expressions use the following syntax:
 `(root|local)(FIELD|INDEX)*` where FIELD represents a field reference and is a

@@ -121,26 +121,3 @@ include Amina_guile.Make_amina_api (struct
          only argument. You did not pass a string to it."
         (to_string x) [%sexp_of: string]
 end)
-
-(* let%expect_test "rewrite" =
-  let open Rewrite in
-  init ();
-  let root =
-    {json|
-     {
-       "example_scalar": 3.14159,
-       "example_array": [1, 2, 3]
-     }
-   |json}
-    |> Yojson.Basic.from_string
-  in
-  init_contexts root;
-  "This is a test expression {expr: (* 3 7)}. Here's a data {data:root.example_array[1]}. Here's a \
-   section {#each:root.example_array}Item:{data:local} {/each}. It works! See?\n\
-   Here's a scalar test {#each:root.example_scalar}value: {data:local}{/each}."
-  |> rewrite_string
-  |> printf "%s";
-  [%expect
-    {|
-      This is a test expression 21. Here's a data 2. Here's a section Item:1 Item:2 Item:3 . It works! See?
-      Here's a scalar test value: 3.14159. |}] *)

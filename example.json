@@ -1,4 +1,6 @@
 {
+  "pi": 3.14159,
+  "example": "This is the value of pi: {{data:root.pi}}.",
   "example_array": [
     {
       "name": "first",

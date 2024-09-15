@@ -7,6 +7,7 @@ type tag_type =
   | Data_tag
   | Each_tag
   | Each_expr_tag
+  | Eval_tag
 [@@deriving equal, sexp]
 
 let tag_type_of_string = function
@@ -14,6 +15,7 @@ let tag_type_of_string = function
 | "data" -> Data_tag
 | "each" -> Each_tag
 | "each-expr" -> Each_expr_tag
+| "eval" -> Eval_tag
 | s -> failwithf "Error: \"%s\" is an invalid tag name." s ()
 
 let tag_type_to_string = function
@@ -21,6 +23,7 @@ let tag_type_to_string = function
 | Data_tag -> "data"
 | Each_tag -> "each"
 | Each_expr_tag -> "each-expr"
+| Eval_tag -> "eval"
 
 let root_json_context = ref None
 
@@ -124,7 +127,7 @@ let%expect_test "parse_tag" =
   [%expect {| (Tag Expr_tag " 55") |}]
 
 let parse_open_section_tag =
-  lex_open_brace *> lex_open_brace *> lex_pound *> parse_tag_name <&> lex_colon *> parse_tag_content <* lex_close_brace <* lex_close_brace
+  lex_open_brace *> lex_open_brace *> lex_pound *> parse_tag_name <&> option "" (lex_colon *> parse_tag_content) <* lex_close_brace <* lex_close_brace
   >>| fun (tag, s) ->
   Stack.push tag_stack tag;
   tag, s
@@ -188,12 +191,14 @@ let rewrite_tag = function
 | Data_tag -> rewrite_data_tag
 | Each_tag -> failwith "Error: \"each\" tags can only open sections."
 | Each_expr_tag -> failwith "Error: \"each\" tags can only open sections."
+| Eval_tag -> failwith "Error: \"eval\" tags can only open sections."
 
 let rec rewrite_section = function
 | Expr_tag -> failwith "Error: you have an \"expr\" tag opening a section."
 | Data_tag -> failwith "Error: you have a \"data\" tag opening a section."
 | Each_tag -> rewrite_each_section
 | Each_expr_tag -> rewrite_each_expr_section
+| Eval_tag -> rewrite_eval_section
 
 and rewrite_each_section expr content =
   let rewrite_list xs =
@@ -231,6 +236,9 @@ and rewrite_each_expr_section expr content =
     let _ = Stack.pop_exn json_context_stack in
     result
 
+and rewrite_eval_section _expr content =
+  rewrite content |> rewrite_string
+
 and rewrite content =
   List.map content ~f:(function
     | Text text -> rewrite_text text
@@ -240,7 +248,7 @@ and rewrite content =
   |> String.concat
 
 (** Accepts a template string and expands the tags contained within it. *)
-let rewrite_string template =
+and rewrite_string template =
   try parse_string template |> rewrite with
   | Failure msg ->
     failwithf !"Error: an error occured while trying to parse and/or rewrite a template. %s" msg ()

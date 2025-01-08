@@ -1,4 +1,4 @@
-Version: 1.1.0
+Version: 2.1.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -67,6 +67,11 @@ Scheme expression tags have the following syntax: `{{expr: EXPR}}` where
 EXPR is a Scheme expression. When Amina encounters these tags, it passes
 EXPR to Guile Scheme, which evaluates the expression, and replaces the tag
 with the result.
+
+Include tags use the following syntax: `{{include:PATH}}` where `PATH` is a
+file path. When `PATH` is a relative filepath, it is evaluated relative to
+the directory in which Amina has been called. When Amina encounters this tag,
+it loads the referenced file and replaces the tag with the file's content.
 
 Section tags have the following syntax `{{#TAGNAME: EXPR}} CONTENT {{/TAGNAME}}`.
 When Amina encounters a section tag it may do two things. First, it may create a

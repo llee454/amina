@@ -8,6 +8,7 @@ type tag_type =
   | Each_tag
   | Each_expr_tag
   | Eval_tag
+  | Include_tag
 [@@deriving equal, sexp]
 
 let tag_type_of_string = function
@@ -16,6 +17,7 @@ let tag_type_of_string = function
 | "each" -> Each_tag
 | "each-expr" -> Each_expr_tag
 | "eval" -> Eval_tag
+| "include" -> Include_tag
 | s -> failwithf "Error: \"%s\" is an invalid tag name." s ()
 
 let tag_type_to_string = function
@@ -24,6 +26,7 @@ let tag_type_to_string = function
 | Each_tag -> "each"
 | Each_expr_tag -> "each-expr"
 | Eval_tag -> "eval"
+| Include_tag -> "include"
 
 let root_json_context = ref None
 
@@ -186,12 +189,16 @@ let rewrite_data_tag expr =
   | `String string -> string
   | json -> Yojson.Basic.pretty_to_string json
 
+let rewrite_include_tag expr =
+  read_file ~filename:expr
+
 let rewrite_tag = function
-| Expr_tag -> rewrite_expr_tag
-| Data_tag -> rewrite_data_tag
+| Expr_tag -> Fn.compose Lwt.return rewrite_expr_tag
+| Data_tag -> Fn.compose Lwt.return rewrite_data_tag
 | Each_tag -> failwith "Error: \"each\" tags can only open sections."
 | Each_expr_tag -> failwith "Error: \"each\" tags can only open sections."
 | Eval_tag -> failwith "Error: \"eval\" tags can only open sections."
+| Include_tag -> rewrite_include_tag
 
 let rec rewrite_section = function
 | Expr_tag -> failwith "Error: you have an \"expr\" tag opening a section."
@@ -199,16 +206,19 @@ let rec rewrite_section = function
 | Each_tag -> rewrite_each_section
 | Each_expr_tag -> rewrite_each_expr_section
 | Eval_tag -> rewrite_eval_section
+| Include_tag -> failwith "Error: you have an \"include\" tag opening a section."
 
 and rewrite_each_section expr content =
+  let open Lwt.Syntax in
+  let open Lwt.Infix in
   let rewrite_list xs =
-    List.map xs ~f:(fun next_json_context ->
+    Lwt_list.map_p (fun next_json_context : string Lwt.t ->
         Stack.push json_context_stack next_json_context;
-        let result = rewrite content in
+        let+ result = rewrite content in
         let _ = Stack.pop_exn json_context_stack in
         result
-    )
-    |> String.concat
+    ) xs
+    >|= String.concat
   in
   match Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr with
   | `List xs -> rewrite_list xs
@@ -221,15 +231,16 @@ and rewrite_each_section expr content =
 
 and rewrite_each_expr_section expr content =
   let open Amina_guile in
+  let open Lwt.Infix in
   eval_string expr |> Json.of_scm |> function
   | `List xs ->
-    List.map xs ~f:(fun next_json_context ->
+    Lwt_list.map_p (fun next_json_context ->
         Stack.push json_context_stack next_json_context;
         let result = rewrite content in
         let _ = Stack.pop_exn json_context_stack in
         result
-    )
-    |> String.concat
+    ) xs
+    >|= String.concat
   | x ->
     Stack.push json_context_stack x;
     let result = rewrite content in
@@ -237,19 +248,20 @@ and rewrite_each_expr_section expr content =
     result
 
 and rewrite_eval_section _expr content =
-  rewrite content |> rewrite_string
+  Lwt.Infix.((rewrite content) >>= (rewrite_string))
 
 and rewrite content =
-  List.map content ~f:(function
-    | Text text -> rewrite_text text
+  let open Lwt.Infix in
+  Lwt_list.map_p (function
+    | Text text -> Lwt.return @@ rewrite_text text
     | Tag (tag, expr) -> rewrite_tag tag expr
     | Section (tag, expr, content) -> rewrite_section tag expr content
-    )
-  |> String.concat
+    ) content
+  >|= String.concat
 
 (** Accepts a template string and expands the tags contained within it. *)
 and rewrite_string template =
-  try parse_string template |> rewrite with
+  try rewrite (parse_string template) with
   | Failure msg ->
     failwithf !"Error: an error occured while trying to parse and/or rewrite a template. %s" msg ()
   | e ->

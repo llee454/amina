@@ -38,7 +38,7 @@ This file is an example template. It contains Markdown interspersed with Amina t
 For example, Amina will replace the following tag with the value of the root JSON value, which will equal the JSON file's JSON value.
 
 ```json
-{{data:root}}
+{{include:example.json}}
 ```
 
 As shown above, you can reference specific values within the root JSON value by adding additional field and array indices. For example: `{{data:root.example_array[0].message}}`.

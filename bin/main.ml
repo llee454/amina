@@ -17,7 +17,7 @@ let specs =
       "version",
       Some
         (fun () ->
-          printf "Amina version 2.0.0\n";
+          printf "Amina version 2.1.0\n";
           exit 0),
       None );
     ( 'h',
@@ -61,6 +61,6 @@ let () =
              ()
          );
          let* template = read_file ~filename:template_filename in
-         Rewrite.rewrite_string template |> printf "%s";
-         Lwt.return_unit
+         let+ output = Rewrite.rewrite_string template in
+         printf "%s" output;
      end

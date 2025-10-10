@@ -57,6 +57,10 @@ Of course, you can call all of the functions that Guile defines. For example, Am
 {{expr:(string-upcase (get-data "root.example_array[0].message"))}}
 ```
 
+You can call functions defined in a Scheme script file. For example:
+
+This evaluates to 3 times PI: {{expr:(get-pi-multiple 3)}}.
+
 ### Each Path Expression Section Example
 
 Often, we want to display some snippet of text for each element of an array. For example, In markdown, we can easily represent tables using text. However, doing so requires us to wrap the values in each row within vertical pipe characters. The following example, shows how we can do this in Amina:

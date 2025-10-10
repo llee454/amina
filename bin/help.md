@@ -1,4 +1,4 @@
-Version: 2.1.0
+Version: 2.1.1
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -35,7 +35,9 @@ Options
   Tells Amina to read FILENAME, which must contain valid Scheme code, and to
   evaluate it before processing data. Note: if you need to include
   Scheme files that are not included in the standard Guile search
-  path, use the GUILE_LOAD_PATH environment variable.
+  path, use the GUILE_LOAD_PATH environment variable. You may also consider
+  using the `add-to-load-path` functtion to include additional scheme files
+  For example: `(add-to-load-path (dirname (current-filename)))`
 
   -w | --warn
   Tells Amina to print out warnings whenever it detects that you are

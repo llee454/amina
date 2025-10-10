@@ -7,12 +7,20 @@ Scheme expressions, and replaces the tags with the values referenced
 by the path expressions or the strings returned by the Scheme
 expressions.
 
+Installing the Dev Version
+--------------------------
+
+```bash
+sudo apt install opam
+sudo apt install pkg-config guile-3.0-dev libunistring-dev
+opam update
+opam upgrade
+opam switch create 5.1.1+options --no-install
+opam pin add amina https://github.com/llee454/amina.git
+```
+
 Initializing the Build Environment
 ----------------------------------
-
-Note: the following are a hack solution to fix the fact that brew and opam are
-out of sync and opam's owl-plplot library requires library versions that can no
-longer be installed with brew.
 
 ```bash
 opam switch create . 5.1.1+options --no-install

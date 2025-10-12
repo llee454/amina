@@ -3,14 +3,21 @@
   (libraries core yojson)
   (inline_tests)
   (preprocess (pps ppx_jane))
+  ; (foreign_stubs (language c) (names amina_guile)
+  ;   (flags -fPIC -I.
+  ;     -I/usr/include/guile/3.0
+  ;     -I/opt/homebrew/Cellar/guile/3.0.10/include/guile/3.0
+  ;     -I/opt/homebrew/opt/gmp
+  ;     -I/opt/homebrew/opt/gmp/include
+  ;     -I/opt/homebrew/opt/readline/include
+  ;     -D_THREAD_SAFE
+  ;     -I/opt/homebrew/opt/bdw-gc/include
+  ;   ))
   (foreign_stubs (language c) (names amina_guile)
-    (flags -fPIC -I. -I/usr/include/guile/3.0
-      -I/opt/homebrew/Cellar/guile/3.0.10/include/guile/3.0
-      -I/opt/homebrew/opt/gmp
-      -I/opt/homebrew/opt/gmp/include
-      -I/opt/homebrew/opt/readline/include
+    (flags -fPIC -I.
+      -I/usr/local/guile-3.0.10/include/guile/3.0
       -D_THREAD_SAFE
-      -I/opt/homebrew/opt/bdw-gc/include
     ))
-  (c_library_flags -L/opt/homebrew/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
+  ; (c_library_flags -L/opt/homebrew/lib -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
+  (c_library_flags -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
 )

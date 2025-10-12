@@ -126,5 +126,5 @@ include Amina_guile.Make_amina_api (struct
     that represents x in JSON format.
   *)
   let to_json_string x =
-    Json.of_scm x |> Json.to_string |> string_to_string
+    Json.to_json ~return_assoc:true x |> Json.to_string |> string_to_string
 end)

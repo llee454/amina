@@ -147,6 +147,11 @@ CAMLprim value amina_is_pair (value x) {
   CAMLreturn (Val_bool (scm_is_pair (amina_from_ocaml (x))));
 }
 
+CAMLprim value amina_is_list (value x) {
+  CAMLparam1 (x);
+  CAMLreturn (Val_bool (scm_to_bool (scm_list_p (amina_from_ocaml (x)))));
+}
+
 CAMLprim value amina_is_vector (value x) {
   CAMLparam1 (x);
   CAMLreturn (Val_bool (scm_is_vector (amina_from_ocaml (x))));
@@ -242,6 +247,11 @@ CAMLprim value amina_cdr (value x) {
 CAMLprim value amina_vector_to_list (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (scm_vector_to_list (amina_from_ocaml (x))));
+}
+
+CAMLprim value amina_length (value x) {
+  CAMLparam1 (x);
+  CAMLreturn (Val_int (scm_to_long_long (scm_length (amina_from_ocaml (x)))));
 }
 
 /**

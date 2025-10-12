@@ -61,11 +61,13 @@ external is_bool : scm -> bool = "amina_is_bool"
 external is_char : scm -> bool = "amina_is_char"
 external is_null : scm -> bool = "amina_is_null"
 external is_pair : scm -> bool = "amina_is_pair"
+external is_list : scm -> bool = "amina_is_list"
 external is_vector : scm -> bool = "amina_is_vector"
 external cons : scm -> scm -> scm = "amina_cons"
 external car : scm -> scm = "amina_car"
 external cdr : scm -> scm = "amina_cdr"
 external vector_to_list : scm -> scm = "amina_vector_to_list"
+external length : scm -> int = "amina_length"
 external from_integer : scm -> int = "amina_from_integer"
 external from_double : scm -> float = "amina_from_double"
 external from_bool : scm -> bool = "amina_from_bool"
@@ -98,7 +100,27 @@ let rec from_list ~(f : scm -> 'a) (x : scm) : 'a List.t =
 *)
 let from_vector ~(f : scm -> 'a) (x : scm) : 'a List.t =
   if is_vector x then from_list ~f (vector_to_list x) else if is_null x then [] else [ f x ]
-    
+
+(**
+  Accepts two arguments: [f], a function that accepts a Scheme value
+  and returns some value; and [x], a Scheme associative array; and
+  returns the associative array [(key0, f x0), (key1, f x1), ...].
+*)
+let rec from_alist ~f:(f : scm -> 'a) (x : scm) : (string * 'a) List.t =
+  let emsg_prefix = "Error: an internal error occured while trying to convert an associative array (alist) into an OCaml value. "
+  in match () with
+  | () when is_null x -> []
+  | () when is_pair x ->
+      if is_pair (car x)
+      then
+        let key = match () with
+          | () when is_string (car (car x)) -> amina_from_string (car (car x))
+          | () when is_symbol (car (car x)) -> from_symbol (car (car x))
+          | _ -> failwiths ~here:[%here] (emsg_prefix ^ "One or more entries in the list is missing a key value.") (amina_to_string x) [%sexp_of: string]
+        in
+        (key, f (cdr (car x))) :: from_alist ~f (cdr x)
+      else failwiths ~here:[%here] (emsg_prefix ^ "One or more entries is not in (key . value) format. Instead a scalar value was found.") (amina_to_string x)[%sexp_of: string] 
+  | _ -> failwiths ~here:[%here] (emsg_prefix ^ "The given value is not even a list") (amina_to_string x) [%sexp_of: string]
 
 let rec scm_of_sexp : Sexplib.Sexp.t -> scm = function
 | Atom s -> (
@@ -131,11 +153,32 @@ module Json = struct
     List.map xs ~f:(fun (key, data) -> to_list [ string_to_string key; to_scm data ]) |> to_list
   | `List xs -> to_list (List.map xs ~f:to_scm)
 
-  let rec of_scm (x : scm) : Yojson.Basic.t =
+  (**
+    Accepts a Scheme value and returns true iff the value represents an
+    associative list.
+
+    For a Scheme list to be treated like an associative list, it must have
+    the format
+
+      '((key0 . value0) (key1 . value1) ...)
+
+    where none of the values can be null (the empty list).
+  *)
+  let rec is_alist (x : scm) : bool =
+    let key x = car (car x)
+    in
+    is_null x ||
+    (is_pair x && is_pair (car x)
+      && not (is_list (car x))
+      && (is_string (key x) || is_symbol (key x))
+      && is_alist (cdr x))
+  
+  let rec to_json ?(return_assoc = false) (x : scm) : Yojson.Basic.t =
     match () with
     | () when is_null x -> `List []
-    | () when is_pair x -> `List (from_list ~f:of_scm x)
-    | () when is_vector x -> `List (from_vector ~f:of_scm x)
+    | () when return_assoc && is_alist x -> `Assoc (from_alist ~f:(to_json ~return_assoc) x)
+    | () when is_pair x -> `List (from_list ~f:(to_json ~return_assoc) x)
+    | () when is_vector x -> `List (from_vector ~f:(to_json ~return_assoc) x)
     | () when is_bool x -> `Bool (from_bool x)
     | () when is_exact_integer x -> `Int (from_integer x)
     | () when is_number x -> `Float (from_double x)
@@ -148,6 +191,8 @@ module Json = struct
          expression. We couldn't recognize the type Scheme expression's type. It wasn't a string, \
          integer, etc."
         (amina_to_string x) ()
+
+  let of_scm (x : scm) : Yojson.Basic.t = to_json ~return_assoc:false x
 end
 
 module type Amina_api = sig

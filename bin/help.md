@@ -1,4 +1,4 @@
-Version: 2.2.0
+Version: 2.3.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -209,9 +209,22 @@ Example: `(parse-path "root.authors[0].name")`
 ### to-json
 
 `(to-json <value>)` accepts a Scheme value and returns a JSON string that
-represents it. If the value is an associative array such as `((hi . 1.23)
-("hello" "world"))`, this function will return the array as a JSON object
-such as `[["hi",1.23],["hello","be back"]]`.
+represents it.
+
+If the value is an associative array such as
+
+```scheme
+  ((hi . 1.23) (hello . "be back") ("hello" . "world"))
+```  
+this function will return the array as a JSON object such as
+
+```json
+{"hi":1.23,"hello":"be back","hello":"world"}
+```
+
+Note that every element in the array must have the form `(key . value)` and
+that none of the values may equal null (the empty list) for this conversion
+to occur.
 
 Examples
 --------

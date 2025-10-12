@@ -111,5 +111,3 @@ sqlite3 data.sqlite "SELECT JSON_GROUP_ARRAY (JSON_OBJECT ('name', name_hash, 'a
 You can use this feature to generate reports from data stored in databases using Amina.
 
 ## Conclusion
-
-{{expr:(test-to-json)}}

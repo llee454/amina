@@ -157,6 +157,7 @@ module type Amina_api = sig
   val call_with_local_context : scm -> scm -> scm
   val num_to_string : scm -> scm -> scm
   val string_to_num : scm -> scm
+  val to_json_string : scm -> scm
 end
 
 module Make_amina_api (M : Amina_api) = struct
@@ -166,6 +167,7 @@ module Make_amina_api (M : Amina_api) = struct
   external register_call_with_local_context : unit -> unit = "amina_register_call_with_local_context"
   external register_num_to_string : unit -> unit = "amina_register_num_to_string"
   external register_string_to_num : unit -> unit = "amina_register_string_to_num"
+  external register_to_json : unit -> unit = "amina_register_to_json"
 
   let init () =
     Callback.register "parse-path" M.parse_path;
@@ -174,10 +176,12 @@ module Make_amina_api (M : Amina_api) = struct
     Callback.register "call-with-local-context" M.call_with_local_context;
     Callback.register "num->string" M.num_to_string;
     Callback.register "string->num" M.string_to_num;
+    Callback.register "to-json" M.to_json_string;
     register_parse_path ();
     register_get_data_aux ();
     register_get_data ();
     register_call_with_local_context ();
     register_num_to_string ();
-    register_string_to_num ()
+    register_string_to_num ();
+    register_to_json ();
 end

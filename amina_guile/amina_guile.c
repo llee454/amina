@@ -334,3 +334,18 @@ CAMLprim void amina_register_string_to_num () {
   scm_c_define_gsubr (string_to_num_name, 1, 0, 0, &amina_register_string_to_num_callback);
   CAMLreturn0;
 }
+
+const static char* to_json = "to-json";
+
+CAMLprim SCM amina_register_to_json_callback (SCM x) {
+  return amina_from_ocaml (caml_callback (
+    *caml_named_value (to_json),
+    amina_to_ocaml (x)
+  ));
+}
+
+CAMLprim void amina_register_to_json () {
+  CAMLparam0 ();
+  scm_c_define_gsubr (to_json, 1, 0, 0, &amina_register_to_json_callback);
+  CAMLreturn0;
+}

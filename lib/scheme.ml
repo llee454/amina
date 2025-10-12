@@ -120,4 +120,11 @@ include Amina_guile.Make_amina_api (struct
         "Error: an error occured while trying to call string->num. String->num accepts a string as its \
          only argument. You did not pass a string to it."
         (to_string x) [%sexp_of: string]
+
+  (**
+    Accepts one argument: x, a scheme value; and returns a Scheme string
+    that represents x in JSON format.
+  *)
+  let to_json_string x =
+    Json.of_scm x |> Json.to_string |> string_to_string
 end)

@@ -1,4 +1,4 @@
-Version: 2.1.1
+Version: 2.2.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -205,6 +205,13 @@ Example:
 path expression and parses it.
 
 Example: `(parse-path "root.authors[0].name")`
+
+### to-json
+
+`(to-json <value>)` accepts a Scheme value and returns a JSON string that
+represents it. If the value is an associative array such as `((hi . 1.23)
+("hello" "world"))`, this function will return the array as a JSON object
+such as `[["hi",1.23],["hello","be back"]]`.
 
 Examples
 --------

@@ -127,4 +127,35 @@ include Amina_guile.Make_amina_api (struct
   *)
   let to_json_string x =
     Json.to_json ~return_assoc:true x |> Json.to_string |> string_to_string
+
+  (**
+    Accepts one argument: path, a string that represents a JSON path expression;
+    and an optional argument: json, a JSON object.
+
+    When passed only path, this function reads the JSON value referenced by path
+    from either the Root or Local JSON contexts and returns the JSON value as a
+    Scheme string.
+
+    When passed json, this function will read a JSON value from json instead of
+    the Local context.
+
+    Note: this function is useful when you want to read a JSON object and
+    pass it to another function or program that needs the original JSON
+    object. Normally Amina converts JSON objects into lists. This is the
+    primary work-around for this. Amina uses S-expressions internally,
+    which cannot practically distinguish between lists and key-value objects.
+  *)
+  let get_data_json_string path =
+    if is_string path
+    then (
+      let root = Rewrite.get_root_json_context ()
+      and local = Rewrite.get_local_json_context () in
+      let result = from_string path |> Path.eval_string ~root ~local in
+      Json.to_string result |> string_to_string
+    )
+    else
+      failwiths ~here:[%here]
+        "Error: an error occured while trying to evaluate a call to get-data-json-string. get-data-json-string expects a single \
+         string argument that represents a JSON path expression."
+        () [%sexp_of: unit]
 end)

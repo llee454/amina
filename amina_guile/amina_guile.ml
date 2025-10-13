@@ -101,27 +101,6 @@ let rec from_list ~(f : scm -> 'a) (x : scm) : 'a List.t =
 let from_vector ~(f : scm -> 'a) (x : scm) : 'a List.t =
   if is_vector x then from_list ~f (vector_to_list x) else if is_null x then [] else [ f x ]
 
-(**
-  Accepts two arguments: [f], a function that accepts a Scheme value
-  and returns some value; and [x], a Scheme associative array; and
-  returns the associative array [(key0, f x0), (key1, f x1), ...].
-*)
-let rec from_alist ~f:(f : scm -> 'a) (x : scm) : (string * 'a) List.t =
-  let emsg_prefix = "Error: an internal error occured while trying to convert an associative array (alist) into an OCaml value. "
-  in match () with
-  | () when is_null x -> []
-  | () when is_pair x ->
-      if is_pair (car x)
-      then
-        let key = match () with
-          | () when is_string (car (car x)) -> amina_from_string (car (car x))
-          | () when is_symbol (car (car x)) -> from_symbol (car (car x))
-          | _ -> failwiths ~here:[%here] (emsg_prefix ^ "One or more entries in the list is missing a key value.") (amina_to_string x) [%sexp_of: string]
-        in
-        (key, f (cdr (car x))) :: from_alist ~f (cdr x)
-      else failwiths ~here:[%here] (emsg_prefix ^ "One or more entries is not in (key . value) format. Instead a scalar value was found.") (amina_to_string x)[%sexp_of: string] 
-  | _ -> failwiths ~here:[%here] (emsg_prefix ^ "The given value is not even a list") (amina_to_string x) [%sexp_of: string]
-
 let rec scm_of_sexp : Sexplib.Sexp.t -> scm = function
 | Atom s -> (
   match Int.of_string_opt s with
@@ -153,30 +132,9 @@ module Json = struct
     List.map xs ~f:(fun (key, data) -> to_list [ string_to_string key; to_scm data ]) |> to_list
   | `List xs -> to_list (List.map xs ~f:to_scm)
 
-  (**
-    Accepts a Scheme value and returns true iff the value represents an
-    associative list.
-
-    For a Scheme list to be treated like an associative list, it must have
-    the format
-
-      '((key0 . value0) (key1 . value1) ...)
-
-    where none of the values can be null (the empty list).
-  *)
-  let rec is_alist (x : scm) : bool =
-    let key x = car (car x)
-    in
-    is_null x ||
-    (is_pair x && is_pair (car x)
-      && not (is_list (car x))
-      && (is_string (key x) || is_symbol (key x))
-      && is_alist (cdr x))
-  
   let rec to_json ?(return_assoc = false) (x : scm) : Yojson.Basic.t =
     match () with
     | () when is_null x -> `List []
-    | () when return_assoc && is_alist x -> `Assoc (from_alist ~f:(to_json ~return_assoc) x)
     | () when is_pair x -> `List (from_list ~f:(to_json ~return_assoc) x)
     | () when is_vector x -> `List (from_vector ~f:(to_json ~return_assoc) x)
     | () when is_bool x -> `Bool (from_bool x)
@@ -203,6 +161,7 @@ module type Amina_api = sig
   val num_to_string : scm -> scm -> scm
   val string_to_num : scm -> scm
   val to_json_string : scm -> scm
+  val get_data_json_string : scm -> scm
 end
 
 module Make_amina_api (M : Amina_api) = struct
@@ -213,6 +172,7 @@ module Make_amina_api (M : Amina_api) = struct
   external register_num_to_string : unit -> unit = "amina_register_num_to_string"
   external register_string_to_num : unit -> unit = "amina_register_string_to_num"
   external register_to_json : unit -> unit = "amina_register_to_json"
+  external register_get_data_json_string : unit -> unit = "amina_register_get_data_json_string"
 
   let init () =
     Callback.register "parse-path" M.parse_path;
@@ -222,6 +182,7 @@ module Make_amina_api (M : Amina_api) = struct
     Callback.register "num->string" M.num_to_string;
     Callback.register "string->num" M.string_to_num;
     Callback.register "to-json" M.to_json_string;
+    Callback.register "get-data-json-string" M.get_data_json_string;
     register_parse_path ();
     register_get_data_aux ();
     register_get_data ();
@@ -229,4 +190,5 @@ module Make_amina_api (M : Amina_api) = struct
     register_num_to_string ();
     register_string_to_num ();
     register_to_json ();
+    register_get_data_json_string ()
 end

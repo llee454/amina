@@ -1,4 +1,4 @@
-Version: 2.3.0
+Version: 2.4.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -211,20 +211,26 @@ Example: `(parse-path "root.authors[0].name")`
 `(to-json <value>)` accepts a Scheme value and returns a JSON string that
 represents it.
 
-If the value is an associative array such as
+### get-data-json-string
 
-```scheme
-  ((hi . 1.23) (hello . "be back") ("hello" . "world"))
-```  
-this function will return the array as a JSON object such as
+`(get-data-json-string <path>)` accepts a string argument `<path>` that must
+be a JSON path expression. It finds the JSON value reference by `<path>`
+and returns it as a JSON string. If the referenced value is a JSON object,
+this function will return a JSON string that shows it as such.
+
+When you give Amina a JSON string that contains an object such as 
 
 ```json
-{"hi":1.23,"hello":"be back","hello":"world"}
+{"hi": 1.23, "hello": "be back"}
 ```
 
-Note that every element in the array must have the form `(key . value)` and
-that none of the values may equal null (the empty list) for this conversion
-to occur.
+Amina will represent the object internally as an S-expression such as
+
+```scheme
+  ((hi . 1.23) (hello . "be back"))
+```
+
+This loses the fact that the original value was a JSON object - not a list. 
 
 Examples
 --------

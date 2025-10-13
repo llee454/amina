@@ -360,6 +360,21 @@ CAMLprim void amina_register_to_json () {
   CAMLreturn0;
 }
 
+const static char* parse_json = "parse-json";
+
+CAMLprim SCM amina_register_parse_json_callback (SCM x) {
+  return amina_from_ocaml (caml_callback (
+    *caml_named_value (parse_json),
+    amina_to_ocaml (x)
+  ));
+}
+
+CAMLprim void amina_register_parse_json () {
+  CAMLparam0 ();
+  scm_c_define_gsubr (parse_json, 1, 0, 0, &amina_register_parse_json_callback);
+  CAMLreturn0;
+}
+
 const static char* get_data_json_string = "get-data-json-string";
 
 CAMLprim SCM amina_register_get_data_json_string_callback (SCM x) {

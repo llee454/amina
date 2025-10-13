@@ -1,4 +1,4 @@
-Version: 2.4.0
+Version: 2.5.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -210,6 +210,12 @@ Example: `(parse-path "root.authors[0].name")`
 
 `(to-json <value>)` accepts a Scheme value and returns a JSON string that
 represents it.
+
+### parse-json
+
+`(parse-json <json string>)` accepts a JSON string, parses it, and returns
+the result. For example, given a JSON string such as "{\"hello\": \"world\"}",
+this function will return `(("hello" "world"))`.
 
 ### get-data-json-string
 

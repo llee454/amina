@@ -129,6 +129,13 @@ include Amina_guile.Make_amina_api (struct
     Json.to_json ~return_assoc:true x |> Json.to_string |> string_to_string
 
   (**
+    Accepts one argument: json, a Scheme string that represents JSON encoded
+    data; parses the json and return the result as a Scheme value.
+  *)
+  let parse_json json =
+    amina_from_string json |> Json.from_string |> Json.to_scm
+
+  (**
     Accepts one argument: path, a string that represents a JSON path expression;
     and an optional argument: json, a JSON object.
 
@@ -158,4 +165,5 @@ include Amina_guile.Make_amina_api (struct
         "Error: an error occured while trying to evaluate a call to get-data-json-string. get-data-json-string expects a single \
          string argument that represents a JSON path expression."
         () [%sexp_of: unit]
+
 end)

@@ -161,6 +161,7 @@ module type Amina_api = sig
   val num_to_string : scm -> scm -> scm
   val string_to_num : scm -> scm
   val to_json_string : scm -> scm
+  val parse_json : scm -> scm
   val get_data_json_string : scm -> scm
 end
 
@@ -172,6 +173,7 @@ module Make_amina_api (M : Amina_api) = struct
   external register_num_to_string : unit -> unit = "amina_register_num_to_string"
   external register_string_to_num : unit -> unit = "amina_register_string_to_num"
   external register_to_json : unit -> unit = "amina_register_to_json"
+  external register_parse_json : unit -> unit = "amina_register_parse_json"
   external register_get_data_json_string : unit -> unit = "amina_register_get_data_json_string"
 
   let init () =
@@ -182,6 +184,7 @@ module Make_amina_api (M : Amina_api) = struct
     Callback.register "num->string" M.num_to_string;
     Callback.register "string->num" M.string_to_num;
     Callback.register "to-json" M.to_json_string;
+    Callback.register "parse-json" M.parse_json;
     Callback.register "get-data-json-string" M.get_data_json_string;
     register_parse_path ();
     register_get_data_aux ();
@@ -190,5 +193,6 @@ module Make_amina_api (M : Amina_api) = struct
     register_num_to_string ();
     register_string_to_num ();
     register_to_json ();
+    register_parse_json ();
     register_get_data_json_string ()
 end

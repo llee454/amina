@@ -24,6 +24,7 @@
 CAMLprim value amina_to_ocaml (SCM x) {
   CAMLparam0 ();
   CAMLlocal1 (res);
+  scm_permanent_object (x);
   res = caml_alloc (1, Abstract_tag);
   *((SCM*) Data_abstract_val (res)) = x;
   CAMLreturn (res);

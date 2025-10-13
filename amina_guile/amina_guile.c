@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <libguile.h>
 
 #include <caml/mlvalues.h>
@@ -222,7 +223,11 @@ CAMLprim value amina_to_bool (value x) {
 // Accepts an OCaml string and returns it as a Scheme string.
 CAMLprim value amina_string_to_string (value x) {
   CAMLparam1 (x);
-  CAMLreturn (amina_to_ocaml (scm_from_locale_string (String_val (x))));
+  const char* str_from_ocaml = String_val (x);
+  size_t len = strlen (str_from_ocaml);
+  char* scheme_str = malloc ((sizeof (char)) * (len + 1));
+  strncpy (scheme_str, str_from_ocaml, len + 1);
+  CAMLreturn (amina_to_ocaml (scm_from_locale_string (scheme_str)));
 }
 
 /**

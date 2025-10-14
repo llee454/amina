@@ -181,7 +181,12 @@ let%expect_test "parse" =
       ((Text "That has a nested tag: ") (Tag Data_tag " .")))) |}]
 
 let rewrite_text s = s
-let rewrite_expr_tag expr = Amina_guile.(eval_string expr |> to_string_pretty)
+let rewrite_expr_tag expr =
+  let open Amina_guile in
+  let result_expr = eval_string expr in
+  let result = to_string_pretty result_expr in
+  free_scm_value result_expr;
+  result
 
 let rewrite_data_tag expr =
   Path.eval_string ~root:(get_root_json_context ()) ~local:(get_local_json_context ()) expr |> function
@@ -232,7 +237,10 @@ and rewrite_each_section expr content =
 and rewrite_each_expr_section expr content =
   let open Amina_guile in
   let open Lwt.Infix in
-  eval_string expr |> Json.of_scm |> function
+  let result_expr = eval_string expr in
+  let result = Json.of_scm result_expr in
+  free_scm_value result_expr;
+  result |> function
   | `List xs ->
     Lwt_list.map_p (fun next_json_context ->
         Stack.push json_context_stack next_json_context;

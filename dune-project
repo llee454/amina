@@ -4,7 +4,7 @@
 (authors "Larry D. Lee Jr. <llee454@gmail.com>")
 (maintainers "Larry D. Lee Jr. <llee454@gmail.com>")
 (source (github llee454/amina))
-(version 2.5.2)
+(version 2.5.9)
 (use_standard_c_and_cxx_flags true)
 (generate_opam_files)
 (package

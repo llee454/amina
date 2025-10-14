@@ -1,4 +1,4 @@
-Version: 2.5.2
+Version: 2.5.9
 
 Usage: amina.exe [options] --template=FILENAME
 

@@ -24,6 +24,21 @@ external to_string : scm -> string = "amina_to_string"
 let amina_to_string = to_string
 
 (**
+  Accepts an OCaml Scheme value and tells the Scheme garbage collector that
+  the OCaml code no longer needs it.
+
+  WARNING: all SCM objects that OCaml recieves from calls to the
+  `amina_to_ocaml` C function must be freed using this function to avoid
+  memory leaks because `amina_to_ocaml` calls `scm_gc_protect_object`
+  before passing Scheme values to OCaml.
+  
+  I.E. if you write an OCaml function calls any of the functions defined
+  in this file that return SCM objects, you must call this function on the
+  value to free it.
+*)
+external free_scm_value : scm -> unit = "amina_free_scm_value"
+
+(**
   Accepts an OCaml Scheme expression, evaluates it, and returns the
   result as an OCaml Scheme expression.
 *)
@@ -67,7 +82,6 @@ external cons : scm -> scm -> scm = "amina_cons"
 external car : scm -> scm = "amina_car"
 external cdr : scm -> scm = "amina_cdr"
 external vector_to_list : scm -> scm = "amina_vector_to_list"
-external length : scm -> int = "amina_length"
 external from_integer : scm -> int = "amina_from_integer"
 external from_double : scm -> float = "amina_from_double"
 external from_bool : scm -> bool = "amina_from_bool"
@@ -91,7 +105,14 @@ let to_list (xs : scm list) : scm = List.fold_right xs ~init:(eol ()) ~f:cons
   list of [f x0, f x1, ...].
 *)
 let rec from_list ~(f : scm -> 'a) (x : scm) : 'a List.t =
-  if is_pair x then f (car x) :: from_list ~f (cdr x) else if is_null x then [] else [ f x ]
+  if is_pair x
+  then 
+    let first = car x and rem = cdr x in
+    let result = f first :: from_list ~f rem in
+    free_scm_value first;
+    free_scm_value rem;
+    result
+  else if is_null x then [] else [ f x ]
 
 (**
   Accepts two arguments: [f], a function that accepts a Scheme value
@@ -99,7 +120,13 @@ let rec from_list ~(f : scm -> 'a) (x : scm) : 'a List.t =
   list of [f x0, f x1, ...].
 *)
 let from_vector ~(f : scm -> 'a) (x : scm) : 'a List.t =
-  if is_vector x then from_list ~f (vector_to_list x) else if is_null x then [] else [ f x ]
+  if is_vector x
+  then
+    let list = vector_to_list x in
+    let result = from_list ~f list in
+    free_scm_value list;
+    result
+  else if is_null x then [] else [ f x ]
 
 let rec scm_of_sexp : Sexplib.Sexp.t -> scm = function
 | Atom s -> (
@@ -129,14 +156,27 @@ module Json = struct
   | `Float x -> to_double x
   | `String s -> string_to_string s
   | `Assoc xs ->
-    List.map xs ~f:(fun (key, data) -> to_list [ string_to_string key; to_scm data ]) |> to_list
-  | `List xs -> to_list (List.map xs ~f:to_scm)
+    let entries = List.map xs ~f:(fun (key, data) ->
+      let key_expr = string_to_string key and data_expr = to_scm data in
+      let list = to_list [ key_expr; data_expr ] in
+      free_scm_value key_expr;
+      free_scm_value data_expr;
+      list)
+    in
+    let result = to_list entries in
+    List.iter ~f:free_scm_value entries;
+    result
+  | `List xs ->
+    let values = List.map xs ~f:to_scm in
+    let result = to_list values in
+    List.iter ~f:free_scm_value values;
+    result
 
-  let rec to_json ?(return_assoc = false) (x : scm) : Yojson.Basic.t =
+  let rec of_scm (x : scm) : Yojson.Basic.t =
     match () with
     | () when is_null x -> `List []
-    | () when is_pair x -> `List (from_list ~f:(to_json ~return_assoc) x)
-    | () when is_vector x -> `List (from_vector ~f:(to_json ~return_assoc) x)
+    | () when is_pair x -> `List (from_list ~f:of_scm x)
+    | () when is_vector x -> `List (from_vector ~f:of_scm x)
     | () when is_bool x -> `Bool (from_bool x)
     | () when is_exact_integer x -> `Int (from_integer x)
     | () when is_number x -> `Float (from_double x)
@@ -149,8 +189,6 @@ module Json = struct
          expression. We couldn't recognize the type Scheme expression's type. It wasn't a string, \
          integer, etc."
         (amina_to_string x) ()
-
-  let of_scm (x : scm) : Yojson.Basic.t = to_json ~return_assoc:false x
 end
 
 module type Amina_api = sig

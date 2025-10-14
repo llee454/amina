@@ -18,16 +18,30 @@
   Accepts a pointer to a Guile scheme object and returns an OCaml
   reference to that object.
 
-  WARNING: you should call `scm_gc_protect_object` on the Guile Scheme
-  object before passing it to OCaml.
+  WARNING: you MUST call `scm_gc_protect_object` on the Guile Scheme
+  object before passing it to OCaml. See `amina_free_scm_value`.
 */
 CAMLprim value amina_to_ocaml (SCM x) {
   CAMLparam0 ();
   CAMLlocal1 (res);
-  scm_permanent_object (x);
+  scm_gc_protect_object (x);
   res = caml_alloc (1, Abstract_tag);
   *((SCM*) Data_abstract_val (res)) = x;
   CAMLreturn (res);
+}
+
+/**
+  Accepts an OCaml Scheme value and tells the Scheme garbage collector that
+  it can delete the value.
+
+  Note: All values given to OCaml by `amina_to_ocaml` must be freed using
+  this function in your OCaml code to avoid memory leaks - resources never
+  being deleted when no longer needed.
+*/
+CAMLprim void amina_free_scm_value (value x) {
+  CAMLparam1 (x);
+  scm_gc_unprotect_object (amina_from_ocaml (x));
+  CAMLreturn0;
 }
 
 /**
@@ -65,6 +79,9 @@ CAMLprim value amina_to_string (value x) {
 /**
   Accepts an OCaml Scheme expression, evaluates it, and returns the
   result as an OCaml Scheme expression.
+
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
 */
 CAMLprim value amina_eval (value expr) {
   CAMLparam1 (expr);
@@ -77,6 +94,9 @@ CAMLprim value amina_eval (value expr) {
 
   WARNING: you must initialize the Guile environment before calling
   this function.
+
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
 */
 CAMLprim value amina_eval_string (value expr) {
   CAMLparam1 (expr);
@@ -87,6 +107,9 @@ CAMLprim value amina_eval_string (value expr) {
   Accepts an OCaml string that represents a Scheme file name; loads
   the referenced file; and returns the result as an OCaml Scheme
   value.
+  
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
 */
 CAMLprim value amina_load (value filename) {
   CAMLparam1 (filename);
@@ -205,59 +228,83 @@ CAMLprim value amina_from_symbol (value x) {
   CAMLreturn (res);
 }
 
-// Accepts an OCaml integer and returns it as a Scheme integer.
+/**
+  Accepts an OCaml integer and returns it as a Scheme integer.
+
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_to_integer (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (scm_from_long_long (Long_val (x))));
 }
 
+/**
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_to_double (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (scm_from_double (Double_val (x))));
 }
 
+/**
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_to_bool (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (scm_from_bool (Bool_val (x))));
 }
 
-// Accepts an OCaml string and returns it as a Scheme string.
+/**
+  Accepts an OCaml string and returns it as a Scheme string.
+
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_string_to_string (value x) {
   CAMLparam1 (x);
-  const char* str_from_ocaml = String_val (x);
-  size_t len = strlen (str_from_ocaml);
-  char* scheme_str = malloc ((sizeof (char)) * (len + 1));
-  strncpy (scheme_str, str_from_ocaml, len + 1);
-  CAMLreturn (amina_to_ocaml (scm_from_locale_string (scheme_str)));
+  CAMLreturn (amina_to_ocaml (scm_from_locale_string (String_val (x))));
 }
 
 /**
   Accepts two OCaml Scheme values: x and y; and cons them; and returns
   the result.
+
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
 */
 CAMLprim value amina_cons (value x, value y) {
   CAMLparam2 (x, y);
   CAMLreturn (amina_to_ocaml (scm_cons (amina_from_ocaml (x), amina_from_ocaml (y))));
 }
 
+/**
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_car (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (SCM_CAR (amina_from_ocaml (x))));
 }
 
+/**
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_cdr (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (SCM_CDR (amina_from_ocaml (x))));
 }
 
+/**
+  WARNING: you must call `amina_free_scm_value` on the Scheme value returned
+  by this function to free it.
+*/
 CAMLprim value amina_vector_to_list (value x) {
   CAMLparam1 (x);
   CAMLreturn (amina_to_ocaml (scm_vector_to_list (amina_from_ocaml (x))));
-}
-
-CAMLprim value amina_length (value x) {
-  CAMLparam1 (x);
-  CAMLreturn (Val_int (scm_to_long_long (scm_length (amina_from_ocaml (x)))));
 }
 
 /**
@@ -266,8 +313,10 @@ CAMLprim value amina_length (value x) {
 
 const static char* parse_path_name = "parse-path";
 
-CAMLprim SCM amina_register_parse_path_callback (SCM x) {
-  return amina_from_ocaml (caml_callback (*caml_named_value (parse_path_name), amina_to_ocaml (x)));
+SCM amina_register_parse_path_callback (SCM x) {
+  SCM result = amina_from_ocaml (caml_callback (*caml_named_value (parse_path_name), amina_to_ocaml (x)));
+  scm_gc_unprotect_object (x);
+  return result;
 }
 
 CAMLprim void amina_register_parse_path () {
@@ -278,8 +327,10 @@ CAMLprim void amina_register_parse_path () {
 
 const static char* get_data_aux_name = "get-data-aux";
 
-CAMLprim SCM amina_register_get_data_aux_callback (SCM x) {
-  return amina_from_ocaml (caml_callback (*caml_named_value (get_data_aux_name), amina_to_ocaml (x)));
+SCM amina_register_get_data_aux_callback (SCM x) {
+  SCM result = amina_from_ocaml (caml_callback (*caml_named_value (get_data_aux_name), amina_to_ocaml (x)));
+  scm_gc_unprotect_object (x);
+  return result;
 }
 
 CAMLprim void amina_register_get_data_aux () {
@@ -290,12 +341,15 @@ CAMLprim void amina_register_get_data_aux () {
 
 const static char* get_data_name = "get-data";
 
-CAMLprim SCM amina_register_get_data_callback (SCM path, SCM json) {
-  return amina_from_ocaml (caml_callback2 (
+SCM amina_register_get_data_callback (SCM path, SCM json) {
+  SCM result = amina_from_ocaml (caml_callback2 (
     *caml_named_value (get_data_name),
     amina_to_ocaml (path),
     amina_to_ocaml (json)
   ));
+  scm_gc_unprotect_object (path);
+  scm_gc_unprotect_object (json);
+  return result;
 }
 
 CAMLprim void amina_register_get_data () {
@@ -306,12 +360,15 @@ CAMLprim void amina_register_get_data () {
 
 const static char* call_with_local_context_name = "call-with-local-context";
 
-CAMLprim SCM amina_register_call_with_local_context_callback (SCM f, SCM json) {
-  return amina_from_ocaml (caml_callback2 (
+SCM amina_register_call_with_local_context_callback (SCM f, SCM json) {
+  SCM result = amina_from_ocaml (caml_callback2 (
     *caml_named_value (call_with_local_context_name),
     amina_to_ocaml (f),
     amina_to_ocaml (json)
   ));
+  scm_gc_unprotect_object (f);
+  scm_gc_unprotect_object (json);
+  return result;
 }
 
 CAMLprim void amina_register_call_with_local_context () {
@@ -322,12 +379,15 @@ CAMLprim void amina_register_call_with_local_context () {
 
 const static char* num_to_string_name = "num->string";
 
-CAMLprim SCM amina_register_num_to_string_callback (SCM x, SCM args) {
-  return amina_from_ocaml (caml_callback2 (
+SCM amina_register_num_to_string_callback (SCM x, SCM args) {
+   SCM result = amina_from_ocaml (caml_callback2 (
     *caml_named_value (num_to_string_name),
     amina_to_ocaml (x),
     amina_to_ocaml (args)
   ));
+  scm_gc_unprotect_object (x);
+  scm_gc_unprotect_object (args);
+  return result;
 }
 
 CAMLprim void amina_register_num_to_string () {
@@ -338,11 +398,13 @@ CAMLprim void amina_register_num_to_string () {
 
 const static char* string_to_num_name = "string->num";
 
-CAMLprim SCM amina_register_string_to_num_callback (SCM x) {
-  return amina_from_ocaml (caml_callback (
+SCM amina_register_string_to_num_callback (SCM x) {
+  SCM result = amina_from_ocaml (caml_callback (
     *caml_named_value (string_to_num_name),
     amina_to_ocaml (x)
   ));
+  scm_gc_unprotect_object (x);
+  return result;
 }
 
 CAMLprim void amina_register_string_to_num () {
@@ -353,11 +415,13 @@ CAMLprim void amina_register_string_to_num () {
 
 const static char* to_json = "to-json";
 
-CAMLprim SCM amina_register_to_json_callback (SCM x) {
-  return amina_from_ocaml (caml_callback (
+SCM amina_register_to_json_callback (SCM x) {
+  SCM result = amina_from_ocaml (caml_callback (
     *caml_named_value (to_json),
     amina_to_ocaml (x)
   ));
+  scm_gc_unprotect_object (x);
+  return result;
 }
 
 CAMLprim void amina_register_to_json () {
@@ -368,11 +432,13 @@ CAMLprim void amina_register_to_json () {
 
 const static char* parse_json = "parse-json";
 
-CAMLprim SCM amina_register_parse_json_callback (SCM x) {
-  return amina_from_ocaml (caml_callback (
+SCM amina_register_parse_json_callback (SCM x) {
+  SCM result = amina_from_ocaml (caml_callback (
     *caml_named_value (parse_json),
     amina_to_ocaml (x)
   ));
+  scm_gc_unprotect_object (x);
+  return result;
 }
 
 CAMLprim void amina_register_parse_json () {
@@ -383,11 +449,13 @@ CAMLprim void amina_register_parse_json () {
 
 const static char* get_data_json_string = "get-data-json-string";
 
-CAMLprim SCM amina_register_get_data_json_string_callback (SCM x) {
-  return amina_from_ocaml (caml_callback (
+SCM amina_register_get_data_json_string_callback (SCM x) {
+  SCM result = amina_from_ocaml (caml_callback (
     *caml_named_value (get_data_json_string),
     amina_to_ocaml (x)
   ));
+  scm_gc_unprotect_object (x);
+  return result;
 }
 
 CAMLprim void amina_register_get_data_json_string () {

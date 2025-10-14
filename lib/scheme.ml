@@ -79,13 +79,17 @@ include Amina_guile.Make_amina_api (struct
         if is_null args
         then None
         else (
-          match car args with
-          | arg when is_integer arg -> Some (from_integer arg)
+          let arg = car args in
+          let result = match () with
+          | () when is_integer arg -> Some (from_integer arg)
           | _ ->
             failwith
               "Error: an error occured while trying to call num->string. Num->string accepts one \
                optional argument that specifies the number of decimal points to display and which must \
                be an integer. You passed a non integer value to num->string."
+          in
+          free_scm_value arg;
+          result
         )
       in
       to_string x |> Float.of_string |> Float.to_string_hum ~delimiter:',' ?decimals |> string_to_string
@@ -126,7 +130,7 @@ include Amina_guile.Make_amina_api (struct
     that represents x in JSON format.
   *)
   let to_json_string x =
-    Json.to_json ~return_assoc:true x |> Json.to_string |> string_to_string
+    Json.of_scm x |> Json.to_string |> string_to_string
 
   (**
     Accepts one argument: json, a Scheme string that represents JSON encoded

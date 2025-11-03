@@ -18,6 +18,6 @@
       -I/usr/local/guile-3.0.10/include/guile/3.0
       -D_THREAD_SAFE
     ))
-  ; (c_library_flags -L/opt/homebrew/lib -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
-  (c_library_flags -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
+  (c_library_flags -L/opt/homebrew/lib -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
+  ; (c_library_flags                     -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
 )

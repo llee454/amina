@@ -17,6 +17,11 @@
     (flags -fPIC -I.
       -I/usr/local/guile-3.0.10/include/guile/3.0
       -D_THREAD_SAFE
+      -I/opt/homebrew/Cellar/guile/3.0.10/include/guile/3.0
+      -I/opt/homebrew/opt/gmp
+      -I/opt/homebrew/opt/gmp/include
+      -I/opt/homebrew/opt/readline/include
+      -I/opt/homebrew/opt/bdw-gc/include
     ))
   (c_library_flags -L/opt/homebrew/lib -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)
   ; (c_library_flags                     -L/usr/local/guile-3.0.10/lib -lunistring -lgc -lgmp -lffi -lguile-3.0)

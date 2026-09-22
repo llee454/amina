@@ -45,6 +45,14 @@ external free_scm_value : scm -> unit = "amina_free_scm_value"
 external eval : scm -> scm = "amina_eval"
 
 (**
+  Accepts an OCaml Scheme lambda expression that does not accept any arguments,
+  evaluates it, and returns the result as an OCaml Scheme expression.
+
+  Note: f should correspond to a scheme expression of the form `(lambda () BODY)`.
+*)
+external call_0 : scm -> scm = "amina_call_0"
+
+(**
   Accepts one argument: [expr], a string that represents a Scheme
   expression; evaluates [expr]; and returns the result as a string
   value.

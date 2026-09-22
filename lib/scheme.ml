@@ -67,7 +67,7 @@ include Amina_guile.Make_amina_api (struct
   *)
   let call_with_local_context f json =
     let _ = Json.of_scm json |> Stack.push Rewrite.json_context_stack in
-    let result = eval f in
+    let result = call_0 f in
     let _ = Stack.pop Rewrite.json_context_stack in
     result
 

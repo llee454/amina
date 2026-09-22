@@ -89,6 +89,17 @@ CAMLprim value amina_eval (value expr) {
 }
 
 /**
+  Accepts an OCaml Scheme lambda expression that does not accept any arguments,
+  evaluates it, and returns the result as an OCaml Scheme expression.
+
+  Note: f should correspond to a scheme expression of the form `(lambda () BODY)`.
+*/
+CAMLprim value amina_call_0 (value f) {
+  CAMLparam1 (f);
+  CAMLreturn (amina_to_ocaml (scm_call_0 (amina_from_ocaml (f))));
+}
+
+/**
   Accepts an OCaml string that represents a Scheme expression,
   evaluates the expression, and returns the result as a string.
 

@@ -85,7 +85,7 @@ CAMLprim value amina_to_string (value x) {
 */
 CAMLprim value amina_eval (value expr) {
   CAMLparam1 (expr);
-  CAMLreturn (amina_to_ocaml (scm_eval (amina_from_ocaml (expr), SCM_UNDEFINED)));
+  CAMLreturn (amina_to_ocaml (scm_eval (amina_from_ocaml (expr), scm_current_module ())));
 }
 
 /**
@@ -373,7 +373,7 @@ SCM amina_register_call_with_local_context_callback (SCM f, SCM json) {
 
 CAMLprim void amina_register_call_with_local_context () {
   CAMLparam0 ();
-  scm_c_define_gsubr (call_with_local_context_name, 1, 0, 1, &amina_register_call_with_local_context_callback);
+  scm_c_define_gsubr (call_with_local_context_name, 2, 0, 0, &amina_register_call_with_local_context_callback);
   CAMLreturn0;
 }
 

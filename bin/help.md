@@ -1,4 +1,4 @@
-Version: 2.5.11
+Version: 2.7.0
 
 Usage: amina.exe [options] --template=FILENAME
 
@@ -216,27 +216,6 @@ represents it.
 `(parse-json <json string>)` accepts a JSON string, parses it, and returns
 the result. For example, given a JSON string such as "{\"hello\": \"world\"}",
 this function will return `(("hello" "world"))`.
-
-### get-data-json-string
-
-`(get-data-json-string <path>)` accepts a string argument `<path>` that must
-be a JSON path expression. It finds the JSON value reference by `<path>`
-and returns it as a JSON string. If the referenced value is a JSON object,
-this function will return a JSON string that shows it as such.
-
-When you give Amina a JSON string that contains an object such as 
-
-```json
-{"hi": 1.23, "hello": "be back"}
-```
-
-Amina will represent the object internally as an S-expression such as
-
-```scheme
-  ((hi . 1.23) (hello . "be back"))
-```
-
-This loses the fact that the original value was a JSON object - not a list. 
 
 Examples
 --------

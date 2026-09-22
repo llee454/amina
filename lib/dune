@@ -2,6 +2,7 @@
   (name amina)
   (libraries
     core
+    core_unix
     lwt
     lwt.unix
     getopt

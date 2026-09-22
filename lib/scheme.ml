@@ -27,7 +27,6 @@ include Amina_guile.Make_amina_api (struct
             [DEBUG] root context=\"%{Yojson.Basic.pretty_to_string}\"\n\
             [DEBUG] result=\"%{Yojson.Basic.pretty_to_string}\"\n"
           (to_string path) local root result;
-      (* [%sexp_of: Json.t] result |> scm_of_sexp *)
       Json.to_scm result
     )
     else
@@ -80,13 +79,14 @@ include Amina_guile.Make_amina_api (struct
         then None
         else (
           let arg = car args in
-          let result = match () with
-          | () when is_integer arg -> Some (from_integer arg)
-          | _ ->
-            failwith
-              "Error: an error occured while trying to call num->string. Num->string accepts one \
-               optional argument that specifies the number of decimal points to display and which must \
-               be an integer. You passed a non integer value to num->string."
+          let result =
+            match () with
+            | () when is_integer arg -> Some (from_integer arg)
+            | _ ->
+              failwith
+                "Error: an error occured while trying to call num->string. Num->string accepts one \
+                 optional argument that specifies the number of decimal points to display and which must \
+                 be an integer. You passed a non integer value to num->string."
           in
           free_scm_value arg;
           result
@@ -129,45 +129,11 @@ include Amina_guile.Make_amina_api (struct
     Accepts one argument: x, a scheme value; and returns a Scheme string
     that represents x in JSON format.
   *)
-  let to_json_string x =
-    Json.of_scm x |> Json.to_string |> string_to_string
+  let to_json_string x = Json.of_scm x |> Json.to_string |> string_to_string
 
   (**
     Accepts one argument: json, a Scheme string that represents JSON encoded
     data; parses the json and return the result as a Scheme value.
   *)
-  let parse_json json =
-    amina_from_string json |> Json.from_string |> Json.to_scm
-
-  (**
-    Accepts one argument: path, a string that represents a JSON path expression;
-    and an optional argument: json, a JSON object.
-
-    When passed only path, this function reads the JSON value referenced by path
-    from either the Root or Local JSON contexts and returns the JSON value as a
-    Scheme string.
-
-    When passed json, this function will read a JSON value from json instead of
-    the Local context.
-
-    Note: this function is useful when you want to read a JSON object and
-    pass it to another function or program that needs the original JSON
-    object. Normally Amina converts JSON objects into lists. This is the
-    primary work-around for this. Amina uses S-expressions internally,
-    which cannot practically distinguish between lists and key-value objects.
-  *)
-  let get_data_json_string path =
-    if is_string path
-    then (
-      let root = Rewrite.get_root_json_context ()
-      and local = Rewrite.get_local_json_context () in
-      let result = from_string path |> Path.eval_string ~root ~local in
-      Json.to_string result |> string_to_string
-    )
-    else
-      failwiths ~here:[%here]
-        "Error: an error occured while trying to evaluate a call to get-data-json-string. get-data-json-string expects a single \
-         string argument that represents a JSON path expression."
-        () [%sexp_of: unit]
-
+  let parse_json json = amina_from_string json |> Json.from_string |> Json.to_scm
 end)

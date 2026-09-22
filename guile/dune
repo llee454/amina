@@ -1,0 +1,11 @@
+(executable
+  (name guile_amina)
+  (libraries core
+    amina
+  )
+  (preprocess (pps ppx_jane))
+  (foreign_stubs (language c) (names guile_amina)
+    (flags -fPIC -I. -pthread -I/usr/local/include/guile/3.0 ))
+  (modes shared_object)
+  (promote (until-clean))
+)

@@ -108,7 +108,7 @@ let%expect_test "parse_text" =
   |> Angstrom.parse_string ~consume:Prefix parse_text
   |> Result.ok_or_failwith
   |> printf !"%{sexp: grammar}";
-  [%expect {| (Text "This is a test. {not a tag\\\\} ") |}]
+  [%expect {| (Text "This is a test. {not a tag\\} ") |}]
 
 let parse_tag_name =
   take_while1 (fun c ->

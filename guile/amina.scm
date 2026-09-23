@@ -10,6 +10,7 @@
   #:version (1 0 0)
   #:use-module ((rnrs) #:version (6))
   #:export (
+    set-root-context!
     rewrite-string
     parse-path
     get-data-aux
@@ -23,6 +24,10 @@
   ))
 
 (load-extension "guile_amina.so" "init")
+
+; Accepts a list that represents a JSON object and sets it as the root context.
+(define (set-root-context! json)
+  (amina-set-root-context json))
 
 ; Accepts an Amina template string, evaluates it, and returns the result as
 ; a string.

@@ -86,7 +86,11 @@ and rewrite_string template =
         exception was: \"%{Exn.to_string}\"."
       (Stack.top tag_stack) e ()
 
+let set_root_context json =
+  Amina_guile.Json.of_scm json |> Rewrite.init_contexts
+
 let _ =
   Scheme.init ();
   Rewrite.init_contexts `Null;
-  Callback.register "amina_rewrite_string" rewrite_string
+  Callback.register "amina_rewrite_string" rewrite_string;
+  Callback.register "amina_set_root_context" set_root_context

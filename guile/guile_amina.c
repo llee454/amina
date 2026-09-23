@@ -6,6 +6,7 @@
 #include <caml/alloc.h> // caml_copy
 
 #include <libguile.h>
+#include "../amina_guile/amina_guile.h"
 
 /*
   Returns an array of strings that contains the arguments passed to the
@@ -34,10 +35,16 @@ SCM amina_rewrite_string (SCM str) {
   )));
 }
 
+SCM amina_set_root_context (SCM json) {
+  caml_callback (*caml_named_value ("amina_set_root_context"), amina_to_ocaml (json));
+  return SCM_EOL;
+}
+
 /*
   Initializes the guile extension.
 */
 void init () {
   caml_startup (get_argv ());
   scm_c_define_gsubr ("amina-rewrite-string", 1, 0, 0, amina_rewrite_string);
+  scm_c_define_gsubr ("amina-set-root-context", 1, 0, 0, amina_set_root_context);
 }

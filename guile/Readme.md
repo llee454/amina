@@ -78,6 +78,18 @@ the functions provided by Amina. You can call all of the Scheme functions
 that Amina provides through its template language. However, the extension
 provides an additional function
 
-```
-(rewrite-string str)
+Example
+-------
+
+```scheme
+; load the Amina module
+(import (prefix (amina) amina:))
+
+; parse a given JSON string
+(define json (amina:parse-json "{\"pi\": 3.14159}"))
+
+; evaluate a function with the local context set to a given value
+(amina:call-with-local-context
+  (lambda () (amina:get-data "local.pi"))
+  json)
 ```
